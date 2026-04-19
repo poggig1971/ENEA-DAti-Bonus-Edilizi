@@ -475,8 +475,8 @@ const ANNUAL_EMBEDDED = {"Ecobonus":{"cols":["anno","regione","tipo_intervento",
 // │  Lettore" e poi ri-distribuisci il file HTML. Lascia stringhe vuote per │
 // │  disabilitare l'auto-caricamento.                                       │
 // ╰──────────────────────────────────────────────────────────────────────────╯
-const DEFAULT_GSHEET_SUP_URL = '';   // es. 'https://docs.google.com/spreadsheets/d/XXXX/edit'
-const DEFAULT_GSHEET_ANN_URL = '';   // es. 'https://docs.google.com/spreadsheets/d/YYYY/edit'
+const DEFAULT_GSHEET_SUP_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQtmZMQ2E4mGSBE8n2VreUn18V4Lv7LVQBh7nWsU8mWq-RLmOFaRXal__axekzj2uqYTzCZHEPYGN_7/pub?output=csv';
+const DEFAULT_GSHEET_ANN_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQRp8vnuT2-nK3APXITX5S_joQCMeAz-pQ_y0gwjjx8FkHM4tURlOhAYRNz3Kx5ghJipb6S1MM6UWg3/pub?output=csv';
 
 const REGIONS = ENEA_DATA.regions;
 const NORD = ["Valle d'Aosta","Piemonte","Lombardia","Trentino-Alto Adige","Veneto","Friuli-Venezia Giulia","Liguria","Emilia-Romagna"];
@@ -1598,31 +1598,109 @@ function isDriveFileUrl(url){
   return /\/drive\.google\.com\/file\/d\//.test(url);
 }
 
-// Carica solo il foglio Superbonus da uno specifico Sheet ID
-async function loadSuperbonusFromSheet(sheetId){
-  // Prova diversi nomi tab comuni
+// Riconosce gli URL "Pubblicato sul web" (formato /spreadsheets/d/e/{pubkey}/pub?output=…)
+function isPublishedUrl(url){
+  return /\/spreadsheets\/d\/e\/[^\/]+\/pub/i.test(url);
+}
+
+// Trasforma un URL /pub?output=… in /pub?output=xlsx (workbook completo con tutti i tab)
+function toPublishedXlsxUrl(url){
+  let out = url.replace(/([?&])output=(csv|tsv|html|pdf|ods|tab)\b/i, '$1output=xlsx');
+  if(!/[?&]output=/i.test(out)) out += (out.includes('?') ? '&' : '?') + 'output=xlsx';
+  return out;
+}
+
+async function fetchPublishedWorkbook(url){
+  const xlsxUrl = toPublishedXlsxUrl(url);
+  const resp = await fetch(xlsxUrl, {credentials:'omit'});
+  if(!resp.ok) throw new Error(`HTTP ${resp.status} su /pub?output=xlsx`);
+  const ct = (resp.headers.get('content-type') || '').toLowerCase();
+  if(ct.includes('text/html')) throw new Error('Foglio non pubblicato sul web o accesso negato.');
+  const buf = await resp.arrayBuffer();
+  return XLSX.read(buf, {type:'array', cellDates:true});
+}
+
+// Estrae le righe 2D di un foglio (helper)
+function sheetTo2D(sh){
+  return XLSX.utils.sheet_to_json(sh, {header:1, defval:null, raw:false});
+}
+
+// Carica Superbonus da URL: supporta /pub (xlsx) e /spreadsheets/d/{id}/edit (gviz)
+async function loadSuperbonusFromUrl(url){
+  if(isPublishedUrl(url)){
+    const wb = await fetchPublishedWorkbook(url);
+    // Cerca un foglio con header "data | area"
+    let targetRows = null;
+    for(const name of wb.SheetNames){
+      const rows = sheetTo2D(wb.Sheets[name]);
+      if(rows[0] && rows[0].length >= 2
+         && String(rows[0][0]||'').trim().toLowerCase() === 'data'
+         && String(rows[0][1]||'').trim().toLowerCase() === 'area'){
+        targetRows = rows; break;
+      }
+    }
+    if(!targetRows){
+      // fallback: primo foglio con almeno una colonna "data"
+      const rows = sheetTo2D(wb.Sheets[wb.SheetNames[0]]);
+      if(rows[0] && String(rows[0][0]||'').trim().toLowerCase() === 'data') targetRows = rows;
+    }
+    if(!targetRows) throw new Error('Nessun foglio con header "data | area" nel file pubblicato.');
+    return applySuperbonus2D(targetRows);
+  }
+  const id = extractSheetId(url);
+  if(!id) throw new Error('URL non valido');
   const candidates = ['Dati','dati','Sheet1','Foglio1','enea_superbonus','Superbonus'];
   let lastErr;
   for(const tab of candidates){
-    try {
-      const rows = await gsheetTabAs2D(sheetId, tab);
-      return applySuperbonus2D(rows);
-    } catch(e){ lastErr = e; }
+    try { return applySuperbonus2D(await gsheetTabAs2D(id, tab)); }
+    catch(e){ lastErr = e; }
   }
   throw lastErr || new Error('Nessun tab Superbonus riconosciuto.');
 }
 
-// Carica tutti i fogli annuali da uno specifico Sheet ID
-async function loadAnnualFromSheet(sheetId){
+// Carica dati annuali da URL: supporta /pub (xlsx) e gviz
+async function loadAnnualFromUrl(url){
+  if(isPublishedUrl(url)){
+    const wb = await fetchPublishedWorkbook(url);
+    let count = 0;
+    for(const name of ['Ecobonus','Bonus_Casa','Bonus_Facciate']){
+      const sh = wb.Sheets[name];
+      if(!sh) continue;
+      const rows = sheetTo2D(sh);
+      const objs = rows2DToObjects(rows);
+      if(objs.length){ ANNUAL[name] = objs; count++; }
+    }
+    // Auto-detect se l'utente ha pubblicato solo un singolo foglio (CSV classico)
+    if(!count){
+      for(const name of wb.SheetNames){
+        const rows = sheetTo2D(wb.Sheets[name]);
+        if(!rows[0]) continue;
+        const hdr = rows[0].map(h => String(h||'').trim().toLowerCase());
+        const has = (...cols) => cols.every(c => hdr.includes(c));
+        let target = null;
+        if(has('epoca_costruzione') && has('investimento_meur'))     target = 'Bonus_Facciate';
+        else if(has('superficie_m2') || has('potenza_kw'))           target = 'Bonus_Casa';
+        else if(has('tipo_intervento') && has('investimenti_meur'))  target = 'Ecobonus';
+        if(target){
+          const objs = rows2DToObjects(rows);
+          if(objs.length){ ANNUAL[target] = objs; count++; }
+        }
+      }
+    }
+    if(!count) throw new Error('Nessun foglio annuale riconosciuto nel file pubblicato.');
+    return count;
+  }
+  const id = extractSheetId(url);
+  if(!id) throw new Error('URL non valido');
   let count = 0;
   for(const name of ['Ecobonus','Bonus_Casa','Bonus_Facciate']){
     try {
-      const rows = await gsheetTabAs2D(sheetId, name);
+      const rows = await gsheetTabAs2D(id, name);
       const objs = rows2DToObjects(rows);
       if(objs.length){ ANNUAL[name] = objs; count++; }
-    } catch(e){ /* tab opzionale */ }
+    } catch(e){}
   }
-  if(!count) throw new Error('Nessun tab annuale ("Ecobonus" / "Bonus_Casa" / "Bonus_Facciate") trovato.');
+  if(!count) throw new Error('Nessun tab annuale trovato.');
   return count;
 }
 
@@ -1643,35 +1721,27 @@ async function loadFromGoogleSheets(opts){
   // Superbonus
   if(supUrl){
     if(isDriveFileUrl(supUrl)){
-      errs.push('Superbonus: hai incollato un URL di file Drive. Aprilo con Google Sheets e copia il nuovo URL (vedi "?").');
+      errs.push('Superbonus: URL di file Drive non supportato. Usa un URL Sheets /edit o un URL pubblicato /pub?output=csv.');
     } else {
-      const id = extractSheetId(supUrl);
-      if(!id) errs.push('Superbonus: URL non valido.');
-      else {
-        try {
-          const n = await loadSuperbonusFromSheet(id);
-          ok.push(`Superbonus ${n} righe · ${DATES.length} date`);
-          render();
-        } catch(e){ errs.push('Superbonus: ' + (e.message || e)); }
-      }
+      try {
+        const n = await loadSuperbonusFromUrl(supUrl);
+        ok.push(`Superbonus ${n} righe · ${DATES.length} date`);
+        render();
+      } catch(e){ errs.push('Superbonus: ' + (e.message || e)); }
     }
   }
 
   // Annuali
   if(annUrl){
     if(isDriveFileUrl(annUrl)){
-      errs.push('Annuali: hai incollato un URL di file Drive. Aprilo con Google Sheets e copia il nuovo URL (vedi "?").');
+      errs.push('Annuali: URL di file Drive non supportato. Usa un URL Sheets /edit o un URL pubblicato /pub?output=csv.');
     } else {
-      const id = extractSheetId(annUrl);
-      if(!id) errs.push('Annuali: URL non valido.');
-      else {
-        try {
-          const n = await loadAnnualFromSheet(id);
-          ok.push(`${n} foglio annuale${n===1?'':'i'}`);
-          populateAnnualSelectors();
-          renderEcobonus(); renderBonusCasa(); renderBonusFacciate();
-        } catch(e){ errs.push('Annuali: ' + (e.message || e)); }
-      }
+      try {
+        const n = await loadAnnualFromUrl(annUrl);
+        ok.push(`${n} foglio annuale${n===1?'':'i'}`);
+        populateAnnualSelectors();
+        renderEcobonus(); renderBonusCasa(); renderBonusFacciate();
+      } catch(e){ errs.push('Annuali: ' + (e.message || e)); }
     }
   }
 
@@ -1741,4 +1811,5 @@ if(ANNUAL.Bonus_Facciate.length) renderBonusFacciate();
 </script>
 </body>
 </html>
+
 
