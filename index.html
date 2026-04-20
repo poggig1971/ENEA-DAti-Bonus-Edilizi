@@ -200,72 +200,87 @@
 </header>
 
 <!-- Modale istruzioni d'uso -->
+<!-- =========================================================
+     Modale istruzioni d'uso - VERSIONE SEMPLIFICATA
+     Sostituisce le righe 198-252 di Dashboard_Bonus.html
+     ========================================================= -->
 <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="help-panel">
     <button class="help-close" id="helpClose" aria-label="Chiudi">&times;</button>
-    <h2 id="helpTitle">Istruzioni d'uso e note metodologiche</h2>
-    <p>Lo strumento raccoglie in forma interattiva i principali dati ufficiali pubblicati dall'ENEA sui bonus edilizi italiani, aggregandoli a livello regionale e nazionale. Elaborazione a cura di <strong>ANCE Piemonte Valle d'Aosta</strong>.</p>
+    <h2 id="helpTitle">Come usare la dashboard</h2>
 
-    <h3>Fonti</h3>
+    <p>Questo strumento raccoglie in un'unica pagina i dati ENEA sui quattro principali bonus edilizi italiani: <strong>Superbonus, Ecobonus, Bonus Casa, Bonus Facciate</strong>. A cura di <strong>ANCE Piemonte Valle d'Aosta</strong>.</p>
+
+    <h3>Da dove arrivano i dati</h3>
     <ul>
-      <li><strong>Superbonus (110% / 90% / 70% / 65%)</strong>: <a href="https://www.efficienzaenergetica.enea.it/detrazioni-fiscali/superbonus/risultati-superbonus.html" target="_blank" rel="noopener">ENEA — Monitoraggio Superbonus</a>. Dati mensili, aggregati per regione.</li>
-      <li><strong>Ecobonus, Bonus Casa, Bonus Facciate</strong>: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto Annuale detrazioni fiscali</a>. Dati annuali, aggregati per regione e tipologia di intervento.</li>
+      <li><strong>Superbonus</strong>: report mensili ENEA, aggregati per regione. <a href="https://www.efficienzaenergetica.enea.it/detrazioni-fiscali/superbonus/risultati-superbonus.html" target="_blank" rel="noopener">Vai alla fonte</a>.</li>
+      <li><strong>Ecobonus, Bonus Casa, Bonus Facciate</strong>: Rapporto Annuale ENEA, aggregato per regione e tipo di intervento. <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">Vai alla fonte</a>.</li>
+      <li><strong>Province (Ecobonus 2022)</strong>: Rapporto ENEA 2023, Appendice B. È l'unica pubblicazione ENEA con dati a livello provinciale.</li>
     </ul>
 
-    <h3>Come utilizzare la dashboard</h3>
+    <h3>Navigare fra le sezioni</h3>
     <ul>
-      <li>Le quattro sezioni (Superbonus, Ecobonus, Bonus Casa, Bonus Facciate) sono navigabili tramite le linguette in alto.</li>
-      <li>In ogni sezione sono presenti filtri (anno/data, metrica, tipologia), indicatori di sintesi, istogramma regionale e mappa dell'Italia.</li>
-      <li>Passando il puntatore sulle regioni della mappa si visualizza il valore puntuale di ciascuna.</li>
-      <li>Nella scheda Superbonus è possibile selezionare le regioni da includere tramite i chip e scegliere il parametro desiderato tra quelli proposti.</li>
+      <li>Usa le <strong>linguette in alto</strong> per spostarti fra Superbonus, Ecobonus, Bonus Casa, Bonus Facciate e Province.</li>
+      <li>Ogni sezione ha filtri (anno o data, metrica, tipologia), un riassunto dei numeri principali, un istogramma e una mappa.</li>
+      <li>Passa il mouse sulle regioni della mappa per vedere il valore di ciascuna.</li>
+      <li>Nella scheda Superbonus i <strong>chip</strong> servono a includere o escludere le regioni dal confronto.</li>
     </ul>
 
-    <h3>Definizioni territoriali</h3>
-    <p>Le aggregazioni territoriali seguono la ripartizione ufficiale ISTAT. <strong>Nord</strong>: Piemonte, Valle d'Aosta, Lombardia, Trentino-Alto Adige, Veneto, Friuli-Venezia Giulia, Liguria, Emilia-Romagna. <strong>Centro</strong>: Toscana, Umbria, Marche, Lazio. <strong>Sud e Isole</strong>: Abruzzo, Molise, Campania, Puglia, Basilicata, Calabria, Sicilia, Sardegna.</p>
-
-    <h3>Aggiornamento dei dati</h3>
-    <p>La dashboard è distribuita con i dati pubblicati da ENEA fino alla data indicata nel piè di pagina. Per aggiornarla con rilevazioni più recenti sono disponibili due canali, in alto a destra:</p>
+    <h3>Come sono raggruppate le regioni</h3>
+    <p>I raggruppamenti seguono la ripartizione ufficiale ISTAT:</p>
     <ul>
-      <li><strong>File locale (.xlsx)</strong>: pulsanti <em>Superbonus</em> e <em>Annuali</em>; accettano <code>enea_superbonus.xlsx</code> (serie mensile) e <code>Rapporto_ENEA_clean.xlsx</code> (serie annuale). Caricamento occasionale.</li>
-      <li><strong>Google Drive (consigliato)</strong>: incolla i due URL Google Sheet nei campi dedicati. Gli URL vengono memorizzati sul browser corrente e <strong>ricaricati automaticamente ad ogni apertura della dashboard</strong>: aggiorni il foglio su Drive e la dashboard mostra i nuovi dati senza altri interventi.</li>
-      <li><strong>Default di distribuzione (per tutti gli utenti)</strong>: perché chiunque apra il file <code>Dashboard_Bonus.html</code> da un qualsiasi PC veda i dati aggiornati senza dover incollare nulla, imposta gli URL nelle costanti <code>DEFAULT_GSHEET_SUP_URL</code> e <code>DEFAULT_GSHEET_ANN_URL</code> che trovi in cima allo script (blocco <em>CONFIG</em>) e poi ri-distribuisci il file HTML. Ogni volta che aggiornerai il foglio su Drive, tutti gli utenti vedranno i nuovi dati alla prossima apertura del file.</li>
+      <li><strong>Nord</strong> — Piemonte, Valle d'Aosta, Lombardia, Trentino-Alto Adige, Veneto, Friuli-Venezia Giulia, Liguria, Emilia-Romagna.</li>
+      <li><strong>Centro</strong> — Toscana, Umbria, Marche, Lazio.</li>
+      <li><strong>Sud e Isole</strong> — Abruzzo, Molise, Campania, Puglia, Basilicata, Calabria, Sicilia, Sardegna.</li>
     </ul>
 
-    <h3>Workflow Google Drive — preparazione (una sola volta)</h3>
-    <p>Google Drive non permette al browser di scaricare i file <code>.xlsx</code> in modo diretto. Per usare i due file ENEA occorre <strong>convertirli in Fogli Google</strong> (operazione di pochi secondi):</p>
+    <h3>La scheda Province</h3>
+    <p>Mostra il dettaglio a livello provinciale del solo <strong>Ecobonus 2022</strong> (107 province). Per ogni provincia trovi: investimenti in M€, risparmio energetico in GWh/anno, popolazione residente, investimento pro capite. Per gli altri bonus il dato provinciale non è disponibile nelle pubblicazioni ENEA.</p>
+
+    <h3>Aggiornare i dati — 3 modi</h3>
+    <p>I dati forniti con la dashboard sono aggiornati fino alla data indicata in fondo alla pagina. Per caricare dati più recenti puoi scegliere fra tre opzioni, disponibili in alto a destra:</p>
+
+    <p><strong>1. File locale (caricamento una tantum)</strong><br>
+    Clicca su <em>Superbonus</em> o <em>Annuali</em> e scegli il file dal tuo computer:</p>
+    <ul>
+      <li><code>enea_superbonus.xlsx</code> per i dati mensili</li>
+      <li><code>Rapporto_ENEA_clean.xlsx</code> per i dati annuali</li>
+    </ul>
+
+    <p><strong>2. Google Drive (aggiornamento automatico — consigliato)</strong><br>
+    Incolla gli URL dei Fogli Google nei campi dedicati. La dashboard li ricorda nel browser: se aggiorni il foglio su Drive, i nuovi dati compaiono alla prossima apertura. Nessun'altra operazione.</p>
+
+    <p><strong>3. URL di default per tutti gli utenti</strong><br>
+    Se vuoi che chiunque apra <code>Dashboard_Bonus.html</code> veda i dati aggiornati senza incollare nulla, modifica le costanti <code>DEFAULT_GSHEET_SUP_URL</code> e <code>DEFAULT_GSHEET_ANN_URL</code> in cima allo script (blocco <em>CONFIG</em>) e ridistribuisci il file.</p>
+
+    <h3>Preparare un Foglio Google (solo la prima volta)</h3>
+    <p>Google Drive non permette al browser di scaricare direttamente un file <code>.xlsx</code>: occorre convertirlo prima in Foglio Google.</p>
     <ol>
-      <li>Carica <code>enea_superbonus.xlsx</code> e <code>Rapporto_ENEA_clean.xlsx</code> su Google Drive.</li>
-      <li>Tasto destro sul file → <em>Apri con &gt; Fogli Google</em>.</li>
-      <li>In Fogli: <em>File &gt; Salva come Fogli Google</em>. Si crea un nuovo file (icona verde): è quello da usare.</li>
-      <li>Pulsante <em>Condividi</em> → <em>Accesso generale &gt; Chiunque con il link &gt; Lettore</em> → <em>Copia link</em>.</li>
-      <li>Incolla il link nel campo corrispondente in dashboard (Superbonus o Annuali) e premi <em>Aggiorna da Google</em>.</li>
+      <li>Carica il file <code>.xlsx</code> su Google Drive.</li>
+      <li>Tasto destro → <em>Apri con</em> → <em>Fogli Google</em>.</li>
+      <li>In Fogli: <em>File</em> → <em>Salva come Fogli Google</em>. Il nuovo file (icona verde) è quello da usare.</li>
+      <li>Pulsante <em>Condividi</em> → <em>Accesso generale</em> → <em>Chiunque con il link — Lettore</em> → <em>Copia link</em>.</li>
+      <li>Incolla il link nel campo della dashboard e premi <em>Aggiorna da Google</em>.</li>
     </ol>
-    <p>Per gli aggiornamenti successivi puoi modificare direttamente il Foglio in Google Sheets, oppure ricaricare lo stesso file <code>.xlsx</code> sul Foglio esistente (in Google Sheets: <em>File &gt; Importa &gt; Sostituisci foglio</em>): l'URL non cambia e la dashboard recupera la versione più recente all'apertura.</p>
+    <p>Per aggiornamenti successivi puoi modificare il Foglio direttamente, oppure in Fogli Google fare <em>File</em> → <em>Importa</em> → <em>Sostituisci foglio</em>. L'URL non cambia e la dashboard recupera la versione più recente alla prossima apertura.</p>
 
-    <h3>Struttura attesa dei tab</h3>
-    <p>I tab del Foglio Google devono avere questi nomi e colonne (rispetto delle maiuscole):</p>
+    <h3>Come devono essere fatti i tab del Foglio Google</h3>
+    <p>I nomi dei tab e delle colonne devono essere esattamente questi (anche le maiuscole):</p>
     <ul>
-      <li><code>Dati</code> — serie mensile Superbonus. Prime due colonne: <code>data</code>, <code>area</code>; seguono le metriche standard ENEA.</li>
-      <li><code>Ecobonus</code> — colonne: <code>anno, regione, tipo_intervento, n_interventi, investimenti_MEUR, risparmio_GWh_anno</code>.</li>
-      <li><code>Bonus_Casa</code> — colonne: <code>anno, regione, tipo_intervento, n_interventi, superficie_m2, potenza_kW, risparmio_GWh_anno</code>.</li>
-      <li><code>Bonus_Facciate</code> — colonne: <code>anno, regione, epoca_costruzione, investimento_MEUR</code>.</li>
+      <li><code>Dati</code> (Superbonus mensile) — prime colonne: <code>data</code>, <code>area</code>, poi le metriche ENEA.</li>
+      <li><code>Ecobonus</code> — <code>anno, regione, tipo_intervento, n_interventi, investimenti_MEUR, risparmio_GWh_anno</code>.</li>
+      <li><code>Bonus_Casa</code> — <code>anno, regione, tipo_intervento, n_interventi, superficie_m2, potenza_kW, risparmio_GWh_anno</code>.</li>
+      <li><code>Bonus_Facciate</code> — <code>anno, regione, epoca_costruzione, investimento_MEUR</code>.</li>
+      <li><code>Province</code> — <code>anno, regione, provincia, investimenti_MEUR, risparmio_GWh_anno, abitanti, investimento_per_abitante_EUR</code>.</li>
     </ul>
 
-    <h3>Sezione Province</h3>
-    <p>La scheda <em>Province</em> riporta il dettaglio a livello provinciale dell'Ecobonus per l'anno 2022 (fonte ENEA — Rapporto 2023, Appendice B: unico tracciato pubblicato con granularità provinciale). Sono disponibili 107 province italiane con quattro KPI chiave: investimenti attivati (M€), risparmio energetico (GWh/anno), popolazione residente e investimento pro capite (€/ab).</p>
-    <p>Per aggiornare il dataset è disponibile un terzo URL Google Sheet (campo <em>Province</em>) con un tab denominato <code>Province</code> e colonne: <code>anno, regione, provincia, investimenti_MEUR, risparmio_GWh_anno, abitanti, investimento_per_abitante_EUR</code>.</p>
-
-    <h3>Limiti e avvertenze</h3>
-    <p>I dati sono riportati fedelmente dalla fonte ENEA. Per l'annualità 2023 del Superbonus ENEA non ha pubblicato rilevazioni mensili, pertanto la serie presenta un'interruzione tra dicembre 2022 e gennaio 2024. Lo strumento ha finalità informative e non costituisce consulenza fiscale; per l'interpretazione normativa si rinvia alla legislazione vigente.</p>
+    <h3>Cosa tenere presente</h3>
+    <ul>
+      <li>I numeri sono quelli pubblicati da ENEA, senza modifiche.</li>
+      <li>Per il Superbonus manca l'annualità 2023: ENEA non ha pubblicato report mensili, quindi la serie salta da dicembre 2022 a gennaio 2024.</li>
+      <li>La dashboard serve a dare un quadro informativo. Non è consulenza fiscale: per le norme consulta sempre la legislazione vigente.</li>
+    </ul>
   </div>
-</div>
-
-<div class="tabs">
-  <div class="tab active" data-tab="superbonus">Superbonus</div>
-  <div class="tab" data-tab="ecobonus">Ecobonus</div>
-  <div class="tab" data-tab="bonuscasa">Bonus Casa</div>
-  <div class="tab" data-tab="bonusfacciate">Bonus Facciate</div>
-  <div class="tab" data-tab="province">Province</div>
 </div>
 
 <main>
