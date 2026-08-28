@@ -282,7 +282,7 @@
     <h3>Da dove arrivano i dati</h3>
     <ul>
       <li><strong>Superbonus</strong>: report mensili ENEA, aggregati per regione. <a href="https://www.efficienzaenergetica.enea.it/detrazioni-fiscali/superbonus/risultati-superbonus.html" target="_blank" rel="noopener">Vai alla fonte</a>.</li>
-      <li><strong>Ecobonus, Bonus Casa, Bonus Facciate</strong>: Appendice B «Schede regionali» del Rapporto Annuale ENEA — 14 tabelle per ciascuna delle 20 regioni. Annualità 2022-2025. <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">Vai alla fonte</a>.</li>
+      <li><strong>Ecobonus, Bonus Casa, Bonus Facciate</strong>: Appendice B «Schede regionali» del Rapporto Annuale ENEA — 14 tabelle per ciascuna delle 20 regioni. Annualità 2022-2025. Sotto ogni grafico trovi l'edizione da cui il dato proviene e la data in cui ENEA l'ha pubblicata: gli intervalli sono irregolari, l'edizione 2024 è uscita a marzo 2025 e la 2025 a ottobre dello stesso anno. <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">Vai alla fonte</a>.</li>
       <li><strong>Province (Ecobonus 2022)</strong>: Rapporto ENEA 2023, Appendice B. È l'unica pubblicazione ENEA con dati a livello provinciale.</li>
     </ul>
 
@@ -508,7 +508,7 @@
   <div class="grid">
     <div class="card">
       <h3>Ecobonus — classifica regionale</h3>
-      <div class="hint" id="eco-hint">Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto Annuale detrazioni fiscali</a>, Appendice B (schede regionali). <strong>Attenzione:</strong> nel 2022 ENEA classificava gli interventi per tecnologia («Serramenti», «Pompa di calore»), dal 2023 per comma di legge («Comma 345b — Sostit. dei serramenti»). I totali regionali sono confrontabili fra tutti gli anni, il dettaglio per tipo d'intervento no.</div>
+      <div class="hint" id="eco-hint">Fonte: Rapporto Annuale ENEA, Appendice B (schede regionali). L'edizione di provenienza e la sua data di pubblicazione compaiono qui quando selezioni un'annualità.</div>
       <div class="chart-wrap"><canvas id="eco-bar"></canvas></div>
     </div>
     <div class="card">
@@ -564,7 +564,7 @@
   <div class="grid">
     <div class="card">
       <h3>Bonus Casa — classifica regionale</h3>
-      <div class="hint" id="bc-hint">Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto Annuale detrazioni fiscali</a>.</div>
+      <div class="hint" id="bc-hint">Fonte: Rapporto Annuale ENEA, Appendice B (schede regionali).</div>
       <div class="chart-wrap"><canvas id="bc-bar"></canvas></div>
     </div>
     <div class="card">
@@ -611,7 +611,7 @@
   <div class="grid">
     <div class="card">
       <h3>Bonus Facciate — investimenti per regione</h3>
-      <div class="hint" id="bf-hint">Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto Annuale detrazioni fiscali</a>. Il 2022 contiene solo il totale regionale (dettaglio per epoca non disponibile nel file sorgente).</div>
+      <div class="hint" id="bf-hint">Fonte: Rapporto Annuale ENEA, Appendice B (schede regionali).</div>
       <div class="chart-wrap"><canvas id="bf-bar"></canvas></div>
     </div>
     <div class="card">
@@ -1608,7 +1608,11 @@ function renderEcobonus(){
   document.getElementById('eco-kpi-topval').textContent = values[0] != null ? fmtNum(values[0], dec) + ' ' + metricLabel : '';
   document.getElementById('eco-kpi-min').textContent = labels[labels.length - 1] || '—';
   document.getElementById('eco-kpi-minval').textContent = values.length ? fmtNum(values[values.length - 1], dec) + ' ' + metricLabel : '';
-  document.getElementById('eco-hint').innerHTML = `Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto Annuale detrazioni fiscali</a>. Anno ${year}, metrica: ${metricLabel}, tipo: ${tipo === '__ALL__' ? 'tutti sommati' : tipo}.`;
+  document.getElementById('eco-hint').innerHTML = fonteRapporto(year)
+    + ` Anno dei dati ${year}, metrica: ${metricLabel}, tipo: ${tipo === '__ALL__' ? 'tutti sommati' : tipo}.`
+    + (year <= 2022
+        ? ' <strong>Attenzione:</strong> fino al 2022 ENEA classificava gli interventi per tecnologia («Serramenti», «Pompa di calore»), dal 2023 per comma di legge («Comma 345b — Sostit. dei serramenti»): i totali regionali restano confrontabili fra gli anni, il dettaglio per tipo no.'
+        : '');
   // bar chart
   const ctx = document.getElementById('eco-bar').getContext('2d');
   if(ecoChart) ecoChart.destroy();
@@ -1658,7 +1662,11 @@ function renderBonusCasa(){
   document.getElementById('bc-kpi-topval').textContent = values[0] != null ? fmtNum(values[0], dec) + ' ' + metricLabel : '';
   document.getElementById('bc-kpi-min').textContent = labels[labels.length - 1] || '—';
   document.getElementById('bc-kpi-minval').textContent = values.length ? fmtNum(values[values.length - 1], dec) + ' ' + metricLabel : '';
-  document.getElementById('bc-hint').innerHTML = `Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto Annuale detrazioni fiscali</a>. Anno ${year}, metrica: ${metricLabel}, tipo: ${tipo === '__ALL__' ? 'tutti sommati' : tipo}.`;
+  document.getElementById('bc-hint').innerHTML = fonteRapporto(year)
+    + ` Anno dei dati ${year}, metrica: ${metricLabel}, tipo: ${tipo === '__ALL__' ? 'tutti sommati' : tipo}.`
+    + (year <= 2022
+        ? ' Nel 2022 potenza e risparmio erano espressi in MW e MWh/anno: sono stati convertiti in kW e GWh/anno per uniformità con gli anni successivi.'
+        : '');
   const ctx = document.getElementById('bc-bar').getContext('2d');
   if(bcChart) bcChart.destroy();
   bcChart = new Chart(ctx, {
@@ -1702,7 +1710,11 @@ function renderBonusFacciate(){
   document.getElementById('bf-kpi-topval').textContent = values[0] != null ? fmtNum(values[0], 2) + ' M€' : '';
   document.getElementById('bf-kpi-min').textContent = labels[labels.length - 1] || '—';
   document.getElementById('bf-kpi-minval').textContent = values.length ? fmtNum(values[values.length - 1], 2) + ' M€' : '';
-  document.getElementById('bf-hint').innerHTML = `Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto Annuale detrazioni fiscali</a>. Anno ${year}, epoca: ${ep === '__ALL__' ? 'tutte sommate' : ep}. Nota: il 2022 contiene solo totale regionale (dettaglio per epoca non disponibile nel file sorgente).`;
+  document.getElementById('bf-hint').innerHTML = fonteRapporto(year)
+    + ` Anno dei dati ${year}, epoca: ${ep === '__ALL__' ? 'tutte sommate' : ep}.`
+    + (year <= 2022
+        ? ' Per il 2022 è disponibile il solo totale regionale: il dettaglio per epoca non era estraibile da quell\'edizione.'
+        : '');
   const ctx = document.getElementById('bf-bar').getContext('2d');
   if(bfChart) bfChart.destroy();
   bfChart = new Chart(ctx, {
@@ -1791,7 +1803,7 @@ function renderProvince(){
     const scope = (region === '__ALL__')
       ? (topN > 0 ? `Top ${topN} province italiane su ${fullCount}` : `Tutte le ${fullCount} province italiane`)
       : (topN > 0 ? `Top ${Math.min(topN, fullCount)} province di ${region}` : `Province di ${region} (${fullCount})`);
-    hint.innerHTML = `Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto annuale detrazioni fiscali (edizione 2023)</a>, Appendice B. Dati <strong>Ecobonus, anno 2022</strong>. Metrica: ${label}. ${scope}. Il dettaglio provinciale non è pubblicato dall'ENEA per le annualità successive.`;
+    hint.innerHTML = `Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto annuale detrazioni fiscali, edizione 2023</a>, pubblicato il 14 dic 2023, Appendice B. Dati <strong>Ecobonus, anno 2022</strong>. Metrica: ${label}. ${scope}. Il dettaglio provinciale non è pubblicato dall'ENEA per le annualità successive.`;
   }
 
   // Chart — barre orizzontali
@@ -2372,6 +2384,41 @@ async function loadFromGoogleSheets(opts){
 })();
 
 // =====================================================================
+// Ogni annualita di dati esce in un Rapporto pubblicato l'anno dopo, ma non a
+// intervalli regolari: fra l'edizione 2024 e la 2025 sono passati sei mesi,
+// fra la 2023 e la 2024 quindici. Sapere quando un dato e stato pubblicato
+// serve a capire quanto e aggiornato.
+// Fonte delle date: elenco pubblicazioni ENEA (consultato il 28/08/2026).
+const EDIZIONI_RAPPORTO = {
+  2025: {edizione: 2026, pubblicato: '2026-07-09',
+         url: 'https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali/rapporto-annuale-sulle-detrazioni-fiscali-2026.html'},
+  2024: {edizione: 2025, pubblicato: '2025-10-07',
+         url: 'https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali/rapporto-annuale-detrazioni-sulle-detrazioni-fiscali-2025.html'},
+  2023: {edizione: 2024, pubblicato: '2025-03-21',
+         url: 'https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali/rapporto-annuale-detrazioni-sulle-fiscali-2024.html'},
+  2022: {edizione: 2023, pubblicato: '2023-12-14',
+         url: 'https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali/le-detrazioni-fiscali-per-l-efficienza-energetica-e-l-utilizzo-delle-fonti-rinnovabili-di-energia-negli-edifici-esistenti-rapporto-annuale-2023-dati-2022.html'},
+  2021: {edizione: 2022, pubblicato: '2022-12-21',
+         url: 'https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali/le-detrazioni-fiscali-per-l-efficienza-energetica-e-l-utilizzo-delle-fonti-rinnovabili-di-energia-negli-edifici-esistenti-rapporto-annuale-2022.html'},
+  2020: {edizione: 2021, pubblicato: '2021-12-01',
+         url: 'https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali/rapporto-annuale-detrazioni-fiscali-2021.html'},
+  2019: {edizione: 2020, pubblicato: '2020-12-09',
+         url: 'https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali/rapporto-annuale-detrazioni-fiscali-2020.html'},
+};
+
+/** Frase di attribuzione per l'annualita mostrata: edizione, data, link. */
+function fonteRapporto(annoDati){
+  const e = EDIZIONI_RAPPORTO[annoDati];
+  if(!e){
+    return 'Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — '
+         + 'Rapporto Annuale detrazioni fiscali</a>, Appendice B (schede regionali). '
+         + '<em>Edizione di provenienza non registrata per il ' + annoDati + '.</em>';
+  }
+  return 'Fonte: <a href="' + e.url + '" target="_blank" rel="noopener">ENEA — Rapporto Annuale '
+       + 'detrazioni fiscali, edizione ' + e.edizione + '</a>, pubblicato il '
+       + fmtItDate(e.pubblicato) + ' · Appendice B, schede regionali.';
+}
+
 // ============ SERIE STORICA: ANDAMENTO MENSILE PER REGIONE ===========
 // =====================================================================
 
