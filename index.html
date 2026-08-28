@@ -352,24 +352,35 @@
 
   /* =====================================================================
      STIMA: tutto cio' che non e' un dato ENEA
-     Il bordo tratteggiato e' la convenzione visiva del "valore ricavato,
-     non misurato". Serve perche' una tabella stampata circola da sola,
-     staccata dalla nota metodologica, e chi la legge deve capire in un
-     colpo d'occhio che quei numeri non sono pubblicati da ENEA.
+     Fondo ambra tenue piu' bordo tratteggiato: sono le due convenzioni
+     visive del "valore ricavato, non misurato". Servono perche' una
+     tabella stampata circola da sola, staccata dalla nota metodologica, e
+     chi la incontra deve capire in un colpo d'occhio che quei numeri non
+     sono pubblicati da ENEA. Il fondo e' tenuto molto chiaro: il testo
+     scuro sopra resta sopra il 12:1 di contrasto.
      ===================================================================== */
   .st-badge{display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:.6px;
     padding:3px 8px; border-radius:4px; color:#7c4a03; background:#fdf3e3;
     border:1px dashed #d9a441; white-space:nowrap}
-  .st-card{border:1px dashed #d9a441}
+  .st-card{border:1px dashed #d9a441; background:#fdfaf3}
+  .st-banda{border-left:3px solid #d9a441; padding-left:9px; margin-top:-2px}
   table.st-tab td.st-val{font-variant-numeric:tabular-nums; color:#7c4a03; white-space:nowrap}
   table.st-tab .st-sub{font-weight:400; font-size:.66rem; letter-spacing:.2px; opacity:.75}
-  table.st-tab tr.st-sel td{background:#fdf3e3; font-weight:700}
-  table.st-tab tr.st-tot td{border-top:2px solid #d9a441; font-weight:700; background:#fbfbfc}
+  /* Le righe della tabella restano bianche sul fondo ambra: senza, i numeri
+     stimati e la nota di metodo finirebbero sulla stessa tinta e la tabella
+     perderebbe le sue righe. */
+  table.st-tab tbody tr td{background:#fff}
+  table.st-tab tr.st-sel td{background:#fbeed7; font-weight:700}
+  table.st-tab tr.st-tot td{border-top:2px solid #d9a441; font-weight:700; background:#f6f2ea}
   .st-tag{display:inline-block; font-size:.68rem; padding:1px 7px; border-radius:9px;
     border:1px solid currentColor; white-space:nowrap}
   .st-tag.st-ok{color:#0f7a52}
   .st-tag.st-med{color:#9a6206}
   .st-tag.st-largo{color:#b0341f}
+  /* La valutazione dell'associazione non e' una delle tre classi calcolate:
+     ha un segno suo, pieno invece che a contorno, per non farla leggere
+     come se fosse un esito della misura. */
+  .st-tag.st-ance{color:#fff; background:#7c4a03; border-color:#7c4a03; font-weight:600}
   /* Nella scheda Province le colonne stimate vanno distinte da quelle reali,
      che nella stessa riga stanno a fianco. */
   table.freq td.st-col{color:#7c4a03; background:#fdf9f1; white-space:nowrap}
@@ -380,8 +391,10 @@
        in piu', quasi tutta bianca. */
     .rp-griglia{grid-template-columns:repeat(3,1fr); gap:10px}
     .st-badge{font-size:7pt; border-style:dashed}
+    .st-card{background:#fdfaf3 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
     table.st-tab{font-size:8pt}
     table.st-tab .st-sub{font-size:6.5pt}
+    .st-banda{font-size:8pt}
     .st-tag{font-size:7pt}
   }
 
@@ -976,6 +989,13 @@
         <select id="rp-provincia"></select>
       </div>
       <div class="ctl">
+        <label for="rp-banda">Banda della stima</label>
+        <select id="rp-banda">
+          <option value="90">Prudente — copre l'88% dei casi</option>
+          <option value="75">Equilibrata — copre il 70%</option>
+        </select>
+      </div>
+      <div class="ctl">
         <label for="rp-data">Superbonus — data di riferimento</label>
         <select id="rp-data"></select>
       </div>
@@ -1040,9 +1060,13 @@
       <div class="hint">ENEA non pubblica il Superbonus per provincia: il dato non esiste.
         Il totale regionale è qui ripartito fra le province con due chiavi indipendenti,
         entrambe prese dalla tabella provinciale del Rapporto ENEA 2023 — gli investimenti
-        Ecobonus 2022 e gli abitanti. Ogni cifra è l'intervallo fra le due chiavi:
-        dove concordano la stima è stretta, dove divergono è ampia e va usata con cautela.
-        <strong>Non sono dati ENEA e non vanno citati come tali.</strong></div>
+        Ecobonus 2022 e gli abitanti — e la forbice fra le due è poi allargata della banda
+        di errore misurata su 106 province.
+        <strong>Non sono dati ENEA e non vanno citati come tali.</strong>
+        Dove ANCE Piemonte ha espresso una valutazione diretta sul proprio mercato, l'intervallo
+        mostrato è quello e la riga lo dichiara; la banda calcolata che sostituisce resta scritta
+        sotto, così il lettore vede sempre entrambe.</div>
+      <div class="hint st-banda" id="rp-stima-banda"></div>
       <div class="rp-analisi" id="rp-stima-testo"></div>
       <div id="rp-stima"></div>
     </div>
@@ -3739,10 +3763,21 @@ function rpGrafico(regione){
 // con DUE chiavi indipendenti, prese entrambe da quella stessa tabella:
 //   1. gli investimenti Ecobonus 2022 della provincia
 //   2. gli abitanti della provincia
-// Il risultato non e' un numero ma l'intervallo fra le due chiavi. Dove
-// concordano la stima e' stretta e regge; dove divergono e' larga, e si
-// vede a occhio che quel numero vale poco. Un valore unico avrebbe
-// nascosto proprio l'informazione piu' importante.
+//
+// Le due chiavi da sole NON bastano a dire l'incertezza. Su Torino, per
+// dire, cadono a tre decimi di punto l'una dall'altra: un intervallo di
+// quella larghezza direbbe che la quota e' nota al decimo, e non e' vero.
+// L'intervallo fra le chiavi misura solo quanto le due concordano fra
+// loro, non quanto sono vicine al valore reale.
+//
+// Percio' la forbice viene allargata di una banda MISURATA, non scelta a
+// occhio. La taratura usa l'unico caso in cui, a livello provinciale, si
+// conoscono sia il valore vero sia quello ricavato da una chiave: la
+// quota di popolazione contro la quota reale dell'Ecobonus 2022, su 106
+// province. L'errore risulta legato alla taglia della provincia — grande
+// provincia, errore piccolo — e le bande qui sotto ne sono i percentili.
+// La copertura dichiarata e' verificata contando quanti dei 106 casi
+// cadono dentro: 88% per la banda prudente, 70% per quella equilibrata.
 //
 // Cosa NON e' stato fatto, e perche': avevo ipotizzato una correzione
 // legata alla quota condominiale del Superbonus (68,9% in Piemonte contro
@@ -3752,7 +3787,50 @@ function rpGrafico(regione){
 
 const STIMA_ETICHETTA = 'STIMA — elaborazione ANCE Piemonte';
 
-/** Ripartizione delle province di una regione secondo le due chiavi. */
+// Banda per classe di taglia: [quota >= 20%, quota 6-20%, quota < 6%].
+const STIMA_BANDE = {
+  '90': {nome: 'prudente',    copertura: 88, banda: [18, 28, 60]},
+  '75': {nome: 'equilibrata', copertura: 70, banda: [12, 18, 35]},
+};
+
+// Valutazioni dirette di ANCE Piemonte, provincia per provincia.
+// Non sono un calcolo e non escono da nessuna tabella: sono il giudizio
+// dell'associazione, che conosce il mercato regionale. Restano separate
+// dalla banda calcolata perche' un rapporto perde credibilita' nel
+// momento in cui il lettore non puo' piu' distinguere cosa e' misurato
+// da cosa e' valutato. Dove c'e' una valutazione l'intervallo mostrato e'
+// quello, e accanto resta scritta la banda calcolata che sostituisce.
+const STIMA_VALUTAZIONI = {
+  'Piemonte': {'Torino': [48, 54]},
+};
+
+function stimaValutazione(regione, provincia){
+  const v = (STIMA_VALUTAZIONI[regione] || {})[provincia];
+  return v ? {lo: v[0], hi: v[1]} : null;
+}
+
+function stimaLivello(){
+  const sel = document.getElementById('rp-banda');
+  const v = sel && STIMA_BANDE[sel.value] ? sel.value : '90';
+  return Object.assign({chiave: v}, STIMA_BANDE[v]);
+}
+
+/** Classe di affidabilita': dipende da quanto la provincia e' grande
+    rispetto alla sua regione, perche' e' li' che l'errore si concentra. */
+function stimaClasse(quota){
+  return quota >= 20 ? 0 : quota >= 6 ? 1 : 2;
+}
+function stimaTenuta(quota, unica, ance){
+  if(ance) return {testo: 'valutazione ANCE', classe: 'st-ance'};
+  if(unica) return {testo: 'esatta', classe: 'st-ok'};
+  const c = stimaClasse(quota);
+  return [{testo: 'buona', classe: 'st-ok'},
+          {testo: 'media', classe: 'st-med'},
+          {testo: 'debole', classe: 'st-largo'}][c];
+}
+
+/** Ripartizione delle province di una regione secondo le due chiavi,
+    allargata della banda di errore misurata. */
 function stimaProvince(regione, iso){
   const righe = PROVINCE.rows.filter(r => r.regione === regione
       && r.investimenti_MEUR != null && r.abitanti);
@@ -3763,41 +3841,44 @@ function stimaProvince(regione, iso){
   const tP = righe.reduce((s, r) => s + r.abitanti, 0);
   if(!tE || !tP) return null;
   const it = (ENEA_DATA.data[iso] || {})['Italia'] || null;
+  const liv = stimaLivello();
+  const unica = righe.length === 1;
 
   const out = righe.map(r => {
     const qE = r.investimenti_MEUR / tE * 100;
     const qP = r.abitanti / tP * 100;
-    const lo = Math.min(qE, qP), hi = Math.max(qE, qP);
-    const media = (lo + hi) / 2;
+    const spanLo = Math.min(qE, qP), spanHi = Math.max(qE, qP);
+    // Con una sola provincia non c'e' nulla da ripartire: il 100% e' un
+    // fatto aritmetico e allargarlo sarebbe un errore, non una cautela.
+    const b = unica ? 0 : liv.banda[stimaClasse(spanHi)] / 100;
+    const bandaLo = Math.max(0, spanLo * (1 - b));
+    const bandaHi = Math.min(100, spanHi * (1 + b));
+    // La valutazione dell'associazione, dove c'e', prevale sul calcolo:
+    // tutte le grandezze a valle vanno ricavate da quella, o la tabella
+    // mostrerebbe una quota e degli importi che non le corrispondono.
+    const val = unica ? null : stimaValutazione(regione, r.provincia);
+    const lo = val ? val.lo : bandaLo;
+    const hi = val ? val.hi : bandaHi;
     return {
       provincia: r.provincia, eco: r.investimenti_MEUR, abitanti: r.abitanti,
-      qE, qP, lo, hi, divario: media ? (hi - lo) / media * 100 : 0,
+      qE, qP, spanLo, spanHi, banda: b * 100, bandaLo, bandaHi, ance: !!val, lo, hi,
+      ampiezza: (lo + hi) ? (hi - lo) / ((lo + hi) / 2) * 100 : 0,
       edLo: d.n_edifici_totale * lo / 100, edHi: d.n_edifici_totale * hi / 100,
       invLo: d.investimenti_ammessi_totale * lo / 100,
       invHi: d.investimenti_ammessi_totale * hi / 100,
-      // peso sul totale nazionale: quota nella regione per quota della
-      // regione sull'Italia, cioe' la stessa stima letta su scala italiana
+      // peso sul totale nazionale: la stessa stima letta su scala italiana
       itLo: it ? d.investimenti_ammessi_totale * lo / 100 / it.investimenti_ammessi_totale * 100 : null,
       itHi: it ? d.investimenti_ammessi_totale * hi / 100 / it.investimenti_ammessi_totale * 100 : null,
     };
   }).sort((a, b) => b.qE - a.qE);
 
-  return {righe: out, regione, iso, ecoTot: tE,
-          unica: righe.length === 1,
+  return {righe: out, regione, iso, ecoTot: tE, unica, livello: liv,
           sbEdifici: d.n_edifici_totale,
           sbInv: d.investimenti_ammessi_totale,
           quotaRegItalia: it ? d.investimenti_ammessi_totale / it.investimenti_ammessi_totale * 100 : null};
 }
 
-/** Quanto e' largo l'intervallo, detto a parole invece che in percentuale. */
-function stimaTenuta(divario, unica){
-  if(unica) return {testo: 'coincide con la regione', classe: 'st-ok'};
-  if(divario < 8)  return {testo: 'stretta',  classe: 'st-ok'};
-  if(divario < 20) return {testo: 'media',    classe: 'st-med'};
-  return {testo: 'ampia', classe: 'st-largo'};
-}
-
-/** Percentuale con una cifra, senza il segno di percento ripetuto. */
+/** Percentuale con una cifra, senza ripetere il segno di percento. */
 function stimaPerc(lo, hi, dec){
   const d = dec === undefined ? 1 : dec;
   const a = lo.toLocaleString('it-IT', {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -3837,23 +3918,29 @@ function stimaDelLa(regione){
 /** Il paragrafo sulla provincia scelta: provincia, regione, Italia. */
 function stimaTesto(s, provincia){
   const p = s.righe.find(r => r.provincia === provincia) || s.righe[0];
-  const t = stimaTenuta(p.divario, s.unica);
+  const t = stimaTenuta(p.spanHi, s.unica, p.ance);
   let out = `<p>Sul Superbonus <strong>${p.provincia}</strong> vale una quota stimata `
     + `<strong>${stimaPerc(p.lo, p.hi)}</strong> ${stimaDelLa(s.regione)}`
     + (p.itLo !== null ? ` e <strong>${stimaPerc(p.itLo, p.itHi, 2)}</strong> del totale nazionale` : '')
     + `, cioè ${stimaInteri(p.edLo, p.edHi)} edifici e ${stimaEuro(p.invLo, p.invHi)} `
     + `di investimenti ammessi a detrazione. `;
   if(s.unica){
-    out += `${rpConArt(s.regione, true)} `
-         + `ha una sola provincia, quindi qui la ripartizione non è una stima: `
-         + `il dato provinciale coincide con quello regionale.</p>`;
+    out += `${rpConArt(s.regione, true)} ha una sola provincia, quindi qui la ripartizione `
+         + `non è una stima: il dato provinciale coincide con quello regionale.</p>`;
     return out;
   }
-  // Sotto l'uno per cento la percentuale arrotondata direbbe "0%", che di
-  // un intervallo largo tre decimi di punto e' una descrizione falsa.
-  out += `L'ampiezza dell'intervallo è ${p.divario < 1 ? 'inferiore all\'1%'
-            : p.divario.toLocaleString('it-IT', {maximumFractionDigits: 0}) + '%'} `
-       + `del valore centrale: stima <strong>${t.testo}</strong>.</p>`;
+  if(p.ance){
+    out += `Questo intervallo è la <strong>valutazione diretta di ANCE Piemonte</strong>, `
+         + `non il risultato del calcolo: le due chiavi cadono fra ${stimaPerc(p.spanLo, p.spanHi)} `
+         + `e la banda calcolata darebbe ${stimaPerc(p.bandaLo, p.bandaHi)}. `
+         + `La valutazione è più stretta della banda, quindi afferma qualcosa che i dati da soli `
+         + `non dimostrano: vale come giudizio dell'associazione sul proprio mercato.</p>`;
+  }else{
+    out += `Le due chiavi cadono fra ${stimaPerc(p.spanLo, p.spanHi)}; `
+         + `l'intervallo qui sopra le allarga della banda di errore misurata per una provincia `
+         + `di questa taglia, ±${p.banda.toLocaleString('it-IT', {maximumFractionDigits: 0})}%. `
+         + `Affidabilità <strong>${t.testo}</strong>.</p>`;
+  }
   const primo = s.righe[0], ultimo = s.righe[s.righe.length - 1];
   out += `<p>Nel resto della regione la ripartizione va da ${primo.provincia} `
        + `(${stimaPerc(primo.lo, primo.hi)}) a ${ultimo.provincia} `
@@ -3872,13 +3959,15 @@ function stimaTabella(s, provincia){
         + '<th class="r">Quota regione<br><span class="st-sub">stima</span></th>'
         + '<th class="r">Edifici<br><span class="st-sub">stima</span></th>'
         + '<th class="r">Investimenti ammessi<br><span class="st-sub">stima</span></th>'
-        + '<th class="r">Ampiezza</th></tr></thead><tbody>';
+        + '<th class="r">Affidabilità</th></tr></thead><tbody>';
   s.righe.forEach(r => {
-    const t = stimaTenuta(r.divario, s.unica);
+    const t = stimaTenuta(r.spanHi, s.unica, r.ance);
     const sel = r.provincia === provincia ? ' class="st-sel"' : '';
     h += `<tr${sel}><td class="rp-reg">${r.provincia}</td>`
        + `<td class="r">${r.eco.toLocaleString('it-IT', {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>`
-       + `<td class="r st-val">${stimaPerc(r.lo, r.hi)}</td>`
+       + `<td class="r st-val">${stimaPerc(r.lo, r.hi)}`
+       + (r.ance ? `<br><span class="st-sub">calcolo: ${stimaPerc(r.bandaLo, r.bandaHi)}</span>` : '')
+       + `</td>`
        + `<td class="r st-val">${stimaInteri(r.edLo, r.edHi)}</td>`
        + `<td class="r st-val">${stimaEuro(r.invLo, r.invHi)}</td>`
        + `<td class="r"><span class="st-tag ${t.classe}">${t.testo}</span></td></tr>`;
@@ -3895,13 +3984,26 @@ function stimaTabella(s, provincia){
 function rpStima(regione, provincia, iso){
   const box = document.getElementById('rp-stima');
   const testo = document.getElementById('rp-stima-testo');
+  const cap = document.getElementById('rp-stima-banda');
   if(!box || !testo) return;
   const s = stimaProvince(regione, iso);
   if(!s){
     testo.innerHTML = '';
+    if(cap) cap.textContent = '';
     box.innerHTML = '<p class="ts-note">Per questa regione non ci sono dati provinciali '
                   + 'nell\'Appendice del Rapporto ENEA 2023: la stima non è calcolabile.</p>';
     return;
+  }
+  if(cap){
+    // "nell'88%" ma "nel 70%": l'articolo segue come si legge il numero, non
+    // la cifra. rpArticoloNum conosce gia' la regola, qui la si trasforma
+    // nella preposizione articolata invece di riscriverla.
+    const nel = {'il ': 'nel ', 'lo ': 'nello ', "l'": "nell'"}[
+      rpArticoloNum(String(s.livello.copertura), 'il')] || 'nel ';
+    cap.textContent = `Banda ${s.livello.nome}: nella verifica su 106 province ha contenuto `
+      + `il valore reale ${nel}${s.livello.copertura}% dei casi. `
+      + `Ampiezza ±${s.livello.banda[0]}% per le province oltre il 20% della regione, `
+      + `±${s.livello.banda[1]}% fra il 6 e il 20%, ±${s.livello.banda[2]}% sotto il 6%.`;
   }
   testo.innerHTML = stimaTesto(s, provincia);
   box.innerHTML = stimaTabella(s, provincia);
@@ -3950,7 +4052,7 @@ function renderRapporto(){
     'Le aree seguono la ripartizione ISTAT: Nord comprende Piemonte, Valle d\'Aosta, Lombardia, Trentino-Alto Adige, Veneto, Friuli-Venezia Giulia, Liguria ed Emilia-Romagna; Centro Toscana, Umbria, Marche e Lazio; Sud e Isole le restanti otto.',
     'La colonna «% su Italia» misura il peso della regione sul totale nazionale, quella «Posizione» il suo rango fra le venti regioni per quel parametro.',
     'Alcuni parametri del Superbonus esistono solo dai report più recenti: dove ENEA non li pubblicava la riga non compare.',
-    'La stima provinciale non è un dato ENEA. Nasce dal totale regionale ripartito con due chiavi — investimenti Ecobonus 2022 e abitanti — e per questo è espressa come intervallo. Misurata dove il confronto è possibile, cioè sulla ripartizione provinciale dell\'Ecobonus, una chiave di questo tipo sbaglia in mediana del 12%, e l\'errore cresce al calare della dimensione della provincia.',
+    'La stima provinciale non è un dato ENEA. Nasce dal totale regionale ripartito con due chiavi — investimenti Ecobonus 2022 e abitanti — e per questo è espressa come intervallo. Misurata dove il confronto è possibile, cioè sulla ripartizione provinciale dell\'Ecobonus 2022, una chiave di questo tipo sbaglia in mediana del 12% e l\'errore cresce al calare della dimensione della provincia. La forbice fra le due chiavi è perciò allargata di una banda tarata su quei 106 casi, più stretta per le province grandi e più larga per quelle piccole; la copertura dichiarata è verificata contandoli.',
   ];
   if(anno <= 2022){
     note.push('Per l\'Ecobonus il 2022 usa la vecchia classificazione ENEA per tecnologia: i totali regionali restano confrontabili con gli altri anni, il dettaglio per tipo d\'intervento no.');
@@ -4005,6 +4107,8 @@ function renderRapporto(){
   };
   riempiProvince();
   if(selP) selP.addEventListener('change', renderRapporto);
+  const selB = document.getElementById('rp-banda');
+  if(selB) selB.addEventListener('change', () => { renderRapporto(); renderProvince(); });
   selR.addEventListener('change', riempiProvince);
 
   [selR, selD, selA].forEach(s => s.addEventListener('change', renderRapporto));
