@@ -359,6 +359,11 @@
     .rp-testata h1{font-size:17pt}
     .card h3{font-size:11pt}
     .rp-analisi p{font-size:9pt; line-height:1.55}
+    /* In stampa la pagina e piu stretta dello schermo, quindi il grafico
+       impilato si rimpicciolisce: l'altezza minima pensata per il video
+       lascerebbe sotto alle barre una fascia bianca inutile. */
+    /* !important perche la misura e scritta nell'attributo style del riquadro */
+    #rp-composizione{min-height:0 !important}
     header, .tabs{display:none !important}
   }
 
@@ -1754,7 +1759,8 @@ const ITALIAN_REGIONS = ['Abruzzo','Basilicata','Calabria','Campania','Emilia-Ro
 function fmtNum(v, dec){
   if(v == null || isNaN(v)) return '—';
   const d = dec == null ? 2 : dec;
-  return v.toLocaleString('it-IT', {maximumFractionDigits: d, minimumFractionDigits: d});
+  return v.toLocaleString('it-IT', {maximumFractionDigits: d, minimumFractionDigits: d,
+                                    useGrouping: 'always'});
 }
 
 async function handleAnnualFile(file){
@@ -3558,7 +3564,7 @@ function rpGrafico(regione){
   const box = document.getElementById('rp-grafico');
   if(!box) return;
 
-  const L = 52, R = 96, T = 26, B = 34, W = 900, H = 300;
+  const L = 52, T = 26, B = 34, W = 900, H = 300;
   const serie = RP_SERIE.map(s => ({
     ...s,
     punti: DATES.map(d => {
@@ -3571,6 +3577,17 @@ function rpGrafico(regione){
   if(!validi.length){ box.innerHTML = '<p class="ts-note">Dati insufficienti per il grafico.</p>'; return; }
   const min = Math.max(0, Math.floor(Math.min(...validi) - 1));
   const max = Math.ceil(Math.max(...validi) + 1);
+
+  // Il margine destro ospita le etichette di fine linea: se resta fisso, una
+  // sigla lunga ("DETRAZIONI 7,3%") esce dal viewBox e viene tagliata via.
+  // Si misura quindi sulle etichette che verranno davvero scritte.
+  const codaLunga = serie.reduce((m, s) => {
+    let u = null;
+    for(let i = s.punti.length - 1; i >= 0; i--){ if(s.punti[i] !== null){ u = i; break; } }
+    return u === null ? m
+      : Math.max(m, `${s.sigla} ${s.punti[u].toLocaleString('it-IT', {maximumFractionDigits: 1})}%`.length);
+  }, 0);
+  const R = Math.max(96, codaLunga * 6.6 + 16);
   const x = i => L + (W - L - R) * (DATES.length < 2 ? 0 : i / (DATES.length - 1));
   const y = v => H - B - (H - T - B) * (max === min ? 0.5 : (v - min) / (max - min));
 
@@ -3779,7 +3796,7 @@ function svgLinee(box, etichette, serie, opz){
   const el = typeof box === 'string' ? document.getElementById(box) : box;
   if(!el) return;
   const o = Object.assign({unita: '', dec: 1, passoX: 12, daZero: false}, opz || {});
-  const L = 58, R = o.margineDestro || 104, T = 26, B = 34;
+  const L = 58, T = 26, B = 34;
 
   const validi = serie.flatMap(s => s.punti).filter(v => v !== null && v !== undefined);
   if(!validi.length){ el.innerHTML = '<p class="ts-note">Dati non disponibili.</p>'; return; }
@@ -3789,9 +3806,22 @@ function svgLinee(box, etichette, serie, opz){
   min = o.daZero ? min : min - margine;
   max = max + margine;
 
+  const num = v => v.toLocaleString('it-IT', {maximumFractionDigits: o.dec}) + o.unita;
+
+  // Il margine destro ospita le etichette di fine linea: se resta fisso, una
+  // sigla lunga ("DETRAZIONI 7,3%") esce dal viewBox e viene tagliata via.
+  // Si misura sulle etichette che verranno davvero scritte.
+  const codaLunga = serie.reduce((m, s) => {
+    let u = null;
+    for(let i = s.punti.length - 1; i >= 0; i--){
+      if(s.punti[i] !== null && s.punti[i] !== undefined){ u = i; break; }
+    }
+    return u === null ? m : Math.max(m, `${s.sigla || s.nome} ${num(s.punti[u])}`.length);
+  }, 0);
+  const R = Math.max(o.margineDestro || 104, codaLunga * 6.6 + 16);
+
   const x = i => L + (SVG_W - L - R) * (etichette.length < 2 ? 0 : i / (etichette.length - 1));
   const y = v => SVG_H - B - (SVG_H - T - B) * (max === min ? 0.5 : (v - min) / (max - min));
-  const num = v => v.toLocaleString('it-IT', {maximumFractionDigits: o.dec}) + o.unita;
 
   let svg = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" width="100%" height="100%" `
           + `preserveAspectRatio="xMidYMid meet" role="img" aria-label="${o.titolo || 'grafico'}">`;
@@ -3850,24 +3880,30 @@ function svgLinee(box, etichette, serie, opz){
 function svgBarre(box, etichette, valori, opz){
   const el = typeof box === 'string' ? document.getElementById(box) : box;
   if(!el) return;
-  const o = Object.assign({dec: 0, unita: '', passoX: 12, kind: null}, opz || {});
-  const L = 66, R = 16, T = 18, B = 34;
+  // W e H sono le dimensioni del sistema di coordinate, non i pixel a schermo:
+  // un riquadro piccolo con un viewBox grande rimpicciolisce anche il testo
+  // fino a renderlo illeggibile, percio i grafici piccoli usano un viewBox
+  // piccolo e restano leggibili.
+  const o = Object.assign({dec: 0, unita: '', passoX: 12, kind: null,
+                           W: SVG_W, H: SVG_H, L: 66, R: 16, T: 18, B: 34, dim: 10},
+                          opz || {});
+  const W = o.W, H = o.H, L = o.L, R = o.R, T = o.T, B = o.B;
   const validi = valori.filter(v => v !== null && v !== undefined);
   if(!validi.length){ el.innerHTML = '<p class="ts-note">Dati non disponibili.</p>'; return; }
   const grezzo = svgTacche(Math.min(0, ...validi), Math.max(0, ...validi), 5);
   const max = grezzo.max, min = grezzo.min;
   const span = (max - min) || 1;
-  const x = i => L + (SVG_W - L - R) * (i + 0.5) / valori.length;
-  const y = v => SVG_H - B - (SVG_H - T - B) * (v - min) / span;
-  const larg = Math.max(2, (SVG_W - L - R) / valori.length * 0.72);
+  const x = i => L + (W - L - R) * (i + 0.5) / valori.length;
+  const y = v => H - B - (H - T - B) * (v - min) / span;
+  const larg = Math.max(2, (W - L - R) / valori.length * 0.72);
   const etichettaNum = v => o.kind ? fmt(v, o.kind)
         : v.toLocaleString('it-IT', {maximumFractionDigits: o.dec}) + o.unita;
 
-  let svg = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" width="100%" height="100%" `
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" `
           + `preserveAspectRatio="xMidYMid meet" role="img" aria-label="${o.titolo || 'grafico a barre'}">`;
   for(const v of grezzo.tacche){
-    svg += `<line x1="${L}" y1="${y(v).toFixed(1)}" x2="${SVG_W - R}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/>`
-         + svgTesto(L - 8, y(v) + 3.5, etichettaNum(v), {ancora: 'end', dim: 10});
+    svg += `<line x1="${L}" y1="${y(v).toFixed(1)}" x2="${W - R}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/>`
+         + svgTesto(L - 6, y(v) + 3.5, etichettaNum(v), {ancora: 'end', dim: o.dim});
   }
   valori.forEach((v, i) => {
     if(v === null || v === undefined) return;
@@ -3876,10 +3912,10 @@ function svgBarre(box, etichette, valori, opz){
          + `width="${larg.toFixed(1)}" height="${Math.max(0.8, alto).toFixed(1)}" rx="1.5" `
          + `fill="${v >= 0 ? '#2a78d6' : '#e34948'}"><title>${etichette[i]}: ${etichettaNum(v)}</title></rect>`;
   });
-  svg += `<line x1="${L}" y1="${y(0).toFixed(1)}" x2="${SVG_W - R}" y2="${y(0).toFixed(1)}" stroke="#94a3b8"/>`;
+  svg += `<line x1="${L}" y1="${y(0).toFixed(1)}" x2="${W - R}" y2="${y(0).toFixed(1)}" stroke="#94a3b8"/>`;
   etichette.forEach((e, i) => {
     if(i % o.passoX && i !== etichette.length - 1) return;
-    svg += svgTesto(x(i), SVG_H - B + 16, e, {dim: 10});
+    svg += svgTesto(x(i), H - B + 15, e, {dim: o.dim});
   });
   el.innerHTML = svg + '</svg>';
 }
@@ -4063,8 +4099,11 @@ function rpMiniAnnuali(regione){
   blocchi.forEach((b, i) => {
     const anni = Array.from(new Set(b.righe.map(r => Number(r.anno)))).sort();
     const valori = anni.map(a => rpSommaAnn(b.righe, a, [regione], b.campo));
+    // viewBox piccolo: questi grafici occupano un terzo di riga, con il
+    // sistema di coordinate grande le scritte diventerebbero illeggibili
     svgBarre(`rp-mini-${i}`, anni.map(String), valori,
-             {dec: b.dec, passoX: 1, titolo: b.titolo});
+             {dec: b.dec, passoX: 1, titolo: b.titolo,
+              W: 320, H: 165, L: 54, R: 8, T: 12, B: 24, dim: 11});
   });
 }
 
