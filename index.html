@@ -170,6 +170,53 @@
   table.cmp th{background:#f8fafc; color:var(--muted); font-weight:600;
     text-transform:uppercase; font-size:.7rem; letter-spacing:.4px}
   table.cmp td{font-variant-numeric:tabular-nums}
+
+  /* ===== Impaginazione a due colonne: filtri fissi, contenuti scorrevoli ===== */
+  html,body{height:100%}
+  body{display:flex; flex-direction:column; overflow:hidden}
+  header{flex:0 0 auto; padding:8px 20px}
+  .tabs{flex:0 0 auto}
+  main{flex:1 1 auto; min-height:0; display:flex; padding:0; margin:0; max-width:none}
+  main > section{flex:1 1 auto; width:100%; min-height:0; display:flex}
+  .filtri{flex:0 0 300px; width:300px; min-width:0; overflow-y:auto; overflow-x:hidden;
+    background:var(--card); border-right:1px solid var(--border); padding:14px 14px 24px}
+  .filtri-tit{font-size:.72rem; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--muted); font-weight:700; margin:0 0 10px; padding-bottom:8px;
+    border-bottom:1px solid var(--border)}
+  .filtri .toolbar{display:block !important; grid-template-columns:1fr !important;
+    background:transparent; border:none; box-shadow:none; padding:0; margin:0}
+  .filtri .toolbar .ctl{margin-bottom:14px}
+  .filtri .card{background:transparent; border:none; box-shadow:none; padding:0; margin:14px 0 0}
+  .filtri .card h3{font-size:.72rem; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--muted); margin:0 0 8px}
+  .filtri .chip-row,.filtri .ts-chips{gap:4px}
+  .filtri .ts-actions{margin-bottom:8px}
+  .filtri .ts-actions label{margin-left:0 !important; width:100%; margin-top:4px}
+  .contenuto{flex:1 1 auto; min-width:0; overflow-y:auto; padding:16px 20px 28px}
+  footer{flex:0 0 auto; padding:8px 20px; font-size:.72rem; line-height:1.45}
+  /* Su schermi stretti le due colonne si impilano e torna lo scorrimento di pagina */
+  @media (max-width:1000px){
+    body{overflow:auto; height:auto}
+    main{flex-direction:column}
+    main > section{flex-direction:column}
+    .filtri{flex:none; width:auto; overflow:visible;
+      border-right:none; border-bottom:1px solid var(--border)}
+    .contenuto{overflow:visible}
+  }
+  /* ===== Link ai fogli su Drive (sostituiscono il pannello di caricamento) ===== */
+  .fonti{margin-left:auto; text-align:right; max-width:420px}
+  .fonti-tit{font-size:.68rem; text-transform:uppercase; letter-spacing:.6px;
+    color:rgba(255,255,255,.72); font-weight:700; margin-bottom:4px}
+  .fonti-link{display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap}
+  .fonti-link a{display:inline-block; padding:4px 10px; border-radius:5px;
+    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.32);
+    color:#fff; text-decoration:none; font-size:.76rem; font-weight:600;
+    transition:background .15s}
+  .fonti-link a:hover{background:rgba(255,255,255,.3)}
+  .fonti-link a.fonti-cart{background:transparent; font-weight:500}
+  .fonti .upload-status{margin-top:5px; font-size:.7rem; color:rgba(255,255,255,.75);
+    text-align:right}
+  .fonti .upload-status:empty{display:none}
 </style>
 </head>
 <body>
@@ -199,39 +246,13 @@
     </div>
   </div>
   <button class="help-btn" id="helpBtn" title="Chiarimenti e istruzioni" aria-label="Apri istruzioni">?</button>
-  <div class="uploader">
-    <div class="upload-row">
-      <label class="upload-btn" title="Carica dati mensili Superbonus (enea_superbonus.xlsx)">
-        <input type="file" id="xlsxUpload" accept=".xlsx,.xls,.csv">
-        Superbonus (.xlsx)
-      </label>
-      <label class="upload-btn" title="Carica dati annuali Ecobonus/Bonus Casa/Bonus Facciate (Rapporto_ENEA_clean.xlsx)">
-        <input type="file" id="annualUpload" accept=".xlsx,.xls">
-        Annuali (.xlsx)
-      </label>
-    </div>
-    <div class="gsheet-block">
-      <div class="gsheet-row">
-        <span class="gsheet-tag">Superbonus</span>
-        <input type="text" id="gsheetSupUrl" class="gsheet-input"
-               placeholder="URL Google Sheet del file Superbonus (mensile)">
-      </div>
-      <div class="gsheet-row">
-        <span class="gsheet-tag">Annuali</span>
-        <input type="text" id="gsheetAnnUrl" class="gsheet-input"
-               placeholder="URL Google Sheet del file annuale (Ecobonus / Bonus Casa / Bonus Facciate)">
-      </div>
-      <div class="gsheet-row">
-        <span class="gsheet-tag">Province</span>
-        <input type="text" id="gsheetProvUrl" class="gsheet-input"
-               placeholder="URL Google Sheet del file province (Ecobonus 2022)">
-      </div>
-      <div class="gsheet-row gsheet-actions">
-        <span class="gsheet-hint">Auto-aggiornamento ad ogni apertura</span>
-        <button type="button" id="gsheetLoad" class="upload-btn gsheet-btn" title="Carica/aggiorna dati da Google">
-          <span aria-hidden="true">⟳</span> Aggiorna da Google
-        </button>
-      </div>
+  <div class="fonti">
+    <div class="fonti-tit">Fogli dati su Google Drive</div>
+    <div class="fonti-link">
+      <a href="https://docs.google.com/spreadsheets/d/15tFzx6Ko94w9Pkb0Ncth5MORkMFdluZuSPF24_jH3Rk/edit" target="_blank" rel="noopener">Superbonus mensile</a>
+      <a href="https://docs.google.com/spreadsheets/d/1Ra-qRJqcwVbFzD7FlR_W7FYHmY6_6UjtAWZ9FXim1TA/edit" target="_blank" rel="noopener">Rapporti annuali</a>
+      <a href="https://docs.google.com/spreadsheets/d/1eNM2sWhagcJ-l5EzxJMD9yV6N43w-R-8z8IIjw9HFBg/edit" target="_blank" rel="noopener">Province</a>
+      <a href="https://drive.google.com/drive/folders/1M9k56zJ1vWGdUDjd-hEkj9mgnCGI_JbQ" target="_blank" rel="noopener" class="fonti-cart">Cartella</a>
     </div>
     <div class="upload-status" id="uploadStatus"></div>
   </div>
@@ -270,7 +291,7 @@
       <li>Usa le <strong>linguette in alto</strong> per spostarti fra Superbonus, Serie storica, Ecobonus, Bonus Casa, Bonus Facciate e Province.</li>
       <li>La scheda <strong>Serie storica</strong> mostra l'andamento mensile del Superbonus: scegli il parametro, l'intervallo di mesi e fino a sei regioni da sovrapporre, con la linea nazionale come riferimento.</li>
       <li>Nella scheda <strong>Province</strong> il riquadro in cima mette a confronto una provincia con un'altra, con la propria regione o con la media delle 107 province italiane.</li>
-      <li>Ogni sezione ha filtri (anno o data, metrica, tipologia), un riassunto dei numeri principali, un istogramma e una mappa.</li>
+      <li>I <strong>filtri</strong> stanno nella colonna fissa a sinistra e restano sempre visibili; i risultati — riassunto dei numeri, istogramma, mappa e tabelle — scorrono nella parte destra.</li>
       <li>Passa il mouse sulle regioni della mappa per vedere il valore di ciascuna.</li>
       <li>Nella scheda Superbonus i <strong>chip</strong> servono a includere o escludere le regioni dal confronto.</li>
     </ul>
@@ -286,42 +307,27 @@
     <h3>La scheda Province</h3>
     <p>Mostra il dettaglio a livello provinciale del solo <strong>Ecobonus 2022</strong> (107 province). Per ogni provincia trovi: investimenti in M€, risparmio energetico in GWh/anno, popolazione residente, investimento pro capite. Per gli altri bonus il dato provinciale non è disponibile nelle pubblicazioni ENEA.</p>
 
-    <h3>Aggiornare i dati — 3 modi</h3>
-    <p>I dati forniti con la dashboard sono aggiornati fino alla data indicata in fondo alla pagina. Per caricare dati più recenti puoi scegliere fra tre opzioni, disponibili in alto a destra:</p>
-
-    <p><strong>1. File locale (caricamento una tantum)</strong><br>
-    Clicca su <em>Superbonus</em> o <em>Annuali</em> e scegli il file dal tuo computer:</p>
+    <h3>Aggiornare i dati</h3>
+    <p>La dashboard si aggiorna da sola: a ogni apertura rilegge i tre Fogli Google
+    su Drive, raggiungibili dai link in alto a destra. L'esito del caricamento
+    compare sotto quei link.</p>
     <ul>
-      <li><code>enea_superbonus.xlsx</code> per i dati mensili</li>
-      <li><code>Rapporto_ENEA_clean.xlsx</code> per i dati annuali</li>
+      <li><strong>Superbonus mensile</strong> — scheda <code>Dati</code>: prime due colonne
+      <code>data</code> e <code>area</code>, poi una colonna per metrica. Per ogni nuovo
+      report ENEA si aggiungono 21 righe (Italia più le 20 regioni) con la data in
+      formato <code>AAAA-MM-GG</code>.</li>
+      <li><strong>Rapporti annuali</strong> — schede <code>Ecobonus</code>,
+      <code>Bonus_Casa</code>, <code>Bonus_Facciate</code>.</li>
+      <li><strong>Province</strong> — scheda <code>Province</code>.</li>
     </ul>
-
-    <p><strong>2. Google Drive (aggiornamento automatico — consigliato)</strong><br>
-    Incolla gli URL dei Fogli Google nei campi dedicati. La dashboard li ricorda nel browser: se aggiorni il foglio su Drive, i nuovi dati compaiono alla prossima apertura. Nessun'altra operazione.</p>
-
-    <p><strong>3. URL di default per tutti gli utenti</strong><br>
-    Se vuoi che chiunque apra <code>Dashboard_Bonus.html</code> veda i dati aggiornati senza incollare nulla, modifica le costanti <code>DEFAULT_GSHEET_SUP_URL</code> e <code>DEFAULT_GSHEET_ANN_URL</code> in cima allo script (blocco <em>CONFIG</em>) e ridistribuisci il file.</p>
-
-    <h3>Preparare un Foglio Google (solo la prima volta)</h3>
-    <p>Google Drive non permette al browser di scaricare direttamente un file <code>.xlsx</code>: occorre convertirlo prima in Foglio Google.</p>
-    <ol>
-      <li>Carica il file <code>.xlsx</code> su Google Drive.</li>
-      <li>Tasto destro → <em>Apri con</em> → <em>Fogli Google</em>.</li>
-      <li>In Fogli: <em>File</em> → <em>Salva come Fogli Google</em>. Il nuovo file (icona verde) è quello da usare.</li>
-      <li>Pulsante <em>Condividi</em> → <em>Accesso generale</em> → <em>Chiunque con il link — Lettore</em> → <em>Copia link</em>.</li>
-      <li>Incolla il link nel campo della dashboard e premi <em>Aggiorna da Google</em>.</li>
-    </ol>
-    <p>Per aggiornamenti successivi puoi modificare il Foglio direttamente, oppure in Fogli Google fare <em>File</em> → <em>Importa</em> → <em>Sostituisci foglio</em>. L'URL non cambia e la dashboard recupera la versione più recente alla prossima apertura.</p>
-
-    <h3>Come devono essere fatti i tab del Foglio Google</h3>
-    <p>I nomi dei tab e delle colonne devono essere esattamente questi (anche le maiuscole):</p>
-    <ul>
-      <li><code>Dati</code> (Superbonus mensile) — prime colonne: <code>data</code>, <code>area</code>, poi le metriche ENEA.</li>
-      <li><code>Ecobonus</code> — <code>anno, regione, tipo_intervento, n_interventi, investimenti_MEUR, risparmio_GWh_anno</code>.</li>
-      <li><code>Bonus_Casa</code> — <code>anno, regione, tipo_intervento, n_interventi, superficie_m2, potenza_kW, risparmio_GWh_anno</code>.</li>
-      <li><code>Bonus_Facciate</code> — <code>anno, regione, epoca_costruzione, investimento_MEUR</code>.</li>
-      <li><code>Province</code> — <code>anno, regione, provincia, investimenti_MEUR, risparmio_GWh_anno, abitanti, investimento_per_abitante_EUR</code>.</li>
-    </ul>
+    <p>Se un Foglio non è raggiungibile, la dashboard continua a funzionare con i dati
+    incorporati nel file e lo segnala. Per sicurezza il caricamento automatico si rifiuta
+    di sostituire la serie mensile con una più corta di quella già presente: così un Foglio
+    non aggiornato non può far sparire dei mesi.</p>
+    <p>I Fogli devono essere condivisi come <em>Chiunque con il link — Lettore</em>.
+    Chi volesse distribuire il file puntando ad altri Fogli può cambiare le costanti
+    <code>DEFAULT_GSHEET_SUP_URL</code>, <code>DEFAULT_GSHEET_ANN_URL</code> e
+    <code>DEFAULT_GSHEET_PROV_URL</code> in cima allo script.</p>
 
     <h3>Cosa tenere presente</h3>
     <ul>
@@ -336,8 +342,9 @@
 <main>
 
 <section id="tab-superbonus">
-
-  <div class="toolbar">
+  <aside class="filtri">
+    <div class="filtri-tit">Filtri</div>
+<div class="toolbar">
     <div class="ctl">
       <label for="paramSel">Parametro da visualizzare</label>
       <select id="paramSel"></select>
@@ -354,6 +361,12 @@
       <div class="chip-row" id="areaChips"></div>
     </div>
   </div>
+  </aside>
+
+  <div class="contenuto">
+
+
+  
 
   <div class="kpis">
     <div class="kpi"><div class="label">Totale Italia</div><div class="value" id="kpi-italia">—</div><div class="sub" id="kpi-italia-sub"></div></div>
@@ -391,12 +404,15 @@
     <div id="rankTable"></div>
   </div>
 
+
+  </div>
 </section>
 
 <!-- ===== Sezioni Annuali (Ecobonus / Bonus Casa / Bonus Facciate) ===== -->
 <section id="tab-andamento" class="viz" style="display:none">
-
-  <div class="toolbar" style="grid-template-columns:1.6fr 1fr 1fr">
+  <aside class="filtri">
+    <div class="filtri-tit">Filtri</div>
+<div class="toolbar" style="grid-template-columns:1.6fr 1fr 1fr">
     <div class="ctl">
       <label for="ts-param">Parametro da visualizzare</label>
       <select id="ts-param"></select>
@@ -410,8 +426,7 @@
       <select id="ts-to"></select>
     </div>
   </div>
-
-  <div class="card" style="margin-bottom:14px">
+<div class="card" style="margin-bottom:14px">
     <h3>Regioni da confrontare <span class="datebadge" id="ts-count"></span></h3>
     <div class="ts-actions">
       <button type="button" data-ts-preset="top3">Prime 3 regioni</button>
@@ -426,6 +441,14 @@
     <div class="ts-chips" id="ts-chips"></div>
     <div class="ts-note" id="ts-limit"></div>
   </div>
+  </aside>
+
+  <div class="contenuto">
+
+
+  
+
+  
 
   <div class="kpis">
     <div class="kpi"><div class="label">Ultimo mese disponibile</div><div class="value" id="ts-kpi-last">—</div><div class="sub" id="ts-kpi-last-sub"></div></div>
@@ -446,10 +469,14 @@
     <div id="ts-table"></div>
   </div>
 
+
+  </div>
 </section>
 
 <section id="tab-ecobonus" style="display:none">
-  <div class="toolbar">
+  <aside class="filtri">
+    <div class="filtri-tit">Filtri</div>
+<div class="toolbar">
     <div class="ctl">
       <label for="eco-year">Anno di riferimento <span class="datebadge" id="eco-year-badge"></span></label>
       <select id="eco-year"></select>
@@ -467,6 +494,11 @@
       <select id="eco-tipo"><option value="__ALL__">Tutti (somma)</option></select>
     </div>
   </div>
+  </aside>
+
+  <div class="contenuto">
+
+  
   <div class="kpis">
     <div class="kpi"><div class="label">Totale Italia</div><div class="value" id="eco-kpi-tot">—</div><div class="sub">somma regionale</div></div>
     <div class="kpi"><div class="label">Media regionale</div><div class="value" id="eco-kpi-avg">—</div><div class="sub">media 20 regioni</div></div>
@@ -492,10 +524,14 @@
     <h3>Dettaglio per tipo di intervento</h3>
     <div id="eco-table"></div>
   </div>
+
+  </div>
 </section>
 
 <section id="tab-bonuscasa" style="display:none">
-  <div class="toolbar">
+  <aside class="filtri">
+    <div class="filtri-tit">Filtri</div>
+<div class="toolbar">
     <div class="ctl">
       <label for="bc-year">Anno di riferimento <span class="datebadge" id="bc-year-badge"></span></label>
       <select id="bc-year"></select>
@@ -514,6 +550,11 @@
       <select id="bc-tipo"><option value="__ALL__">Tutti (somma)</option></select>
     </div>
   </div>
+  </aside>
+
+  <div class="contenuto">
+
+  
   <div class="kpis">
     <div class="kpi"><div class="label">Totale Italia</div><div class="value" id="bc-kpi-tot">—</div><div class="sub">somma regionale</div></div>
     <div class="kpi"><div class="label">Media regionale</div><div class="value" id="bc-kpi-avg">—</div><div class="sub">media 20 regioni</div></div>
@@ -539,10 +580,14 @@
     <h3>Dettaglio per tipo di intervento</h3>
     <div id="bc-table"></div>
   </div>
+
+  </div>
 </section>
 
 <section id="tab-bonusfacciate" style="display:none">
-  <div class="toolbar">
+  <aside class="filtri">
+    <div class="filtri-tit">Filtri</div>
+<div class="toolbar">
     <div class="ctl">
       <label for="bf-year">Anno di riferimento <span class="datebadge" id="bf-year-badge"></span></label>
       <select id="bf-year"></select>
@@ -552,6 +597,11 @@
       <select id="bf-epoca"><option value="__ALL__">Tutte (somma)</option></select>
     </div>
   </div>
+  </aside>
+
+  <div class="contenuto">
+
+  
   <div class="kpis">
     <div class="kpi"><div class="label">Totale Italia (M€)</div><div class="value" id="bf-kpi-tot">—</div><div class="sub">somma regionale</div></div>
     <div class="kpi"><div class="label">Media regionale (M€)</div><div class="value" id="bf-kpi-avg">—</div><div class="sub">media 20 regioni</div></div>
@@ -577,10 +627,43 @@
     <h3>Dettaglio per epoca di costruzione</h3>
     <div id="bf-table"></div>
   </div>
+
+  </div>
 </section>
 
 <!-- ===== Sezione Province (Ecobonus 2022) ===== -->
 <section id="tab-province" style="display:none">
+  <aside class="filtri">
+    <div class="filtri-tit">Filtri</div>
+<div class="toolbar">
+    <div class="ctl">
+      <label for="prov-metric">Metrica</label>
+      <select id="prov-metric">
+        <option value="investimenti_MEUR" selected>Investimenti (M€)</option>
+        <option value="risparmio_GWh_anno">Risparmio energetico (GWh/anno)</option>
+        <option value="abitanti">Abitanti</option>
+        <option value="investimento_per_abitante_EUR">Investimento pro capite (€)</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label for="prov-region">Regione</label>
+      <select id="prov-region"><option value="__ALL__">Tutte le regioni</option></select>
+    </div>
+    <div class="ctl">
+      <label for="prov-top">Top N province</label>
+      <select id="prov-top">
+        <option value="0" selected>Tutte</option>
+        <option value="10">Top 10</option>
+        <option value="20">Top 20</option>
+        <option value="30">Top 30</option>
+        <option value="50">Top 50</option>
+      </select>
+    </div>
+  </div>
+  </aside>
+
+  <div class="contenuto">
+
 
   <div class="card viz" style="margin-bottom:14px">
     <h3>Confronto diretto fra territori</h3>
@@ -634,31 +717,7 @@
     </div>
   </div>
 
-  <div class="toolbar">
-    <div class="ctl">
-      <label for="prov-metric">Metrica</label>
-      <select id="prov-metric">
-        <option value="investimenti_MEUR" selected>Investimenti (M€)</option>
-        <option value="risparmio_GWh_anno">Risparmio energetico (GWh/anno)</option>
-        <option value="abitanti">Abitanti</option>
-        <option value="investimento_per_abitante_EUR">Investimento pro capite (€)</option>
-      </select>
-    </div>
-    <div class="ctl">
-      <label for="prov-region">Regione</label>
-      <select id="prov-region"><option value="__ALL__">Tutte le regioni</option></select>
-    </div>
-    <div class="ctl">
-      <label for="prov-top">Top N province</label>
-      <select id="prov-top">
-        <option value="0" selected>Tutte</option>
-        <option value="10">Top 10</option>
-        <option value="20">Top 20</option>
-        <option value="30">Top 30</option>
-        <option value="50">Top 50</option>
-      </select>
-    </div>
-  </div>
+  
   <div class="kpis">
     <div class="kpi"><div class="label">Totale selezione</div><div class="value" id="prov-kpi-tot">—</div><div class="sub" id="prov-kpi-tot-sub">somma sulle province filtrate</div></div>
     <div class="kpi"><div class="label">Media provinciale</div><div class="value" id="prov-kpi-avg">—</div><div class="sub" id="prov-kpi-avg-sub">media aritmetica</div></div>
@@ -673,6 +732,8 @@
   <div class="card" style="margin-top:14px">
     <h3>Tabella dettaglio province</h3>
     <div id="prov-table"></div>
+  </div>
+
   </div>
 </section>
 
@@ -1316,7 +1377,8 @@ async function handleXlsxFile(file){
   }
 }
 
-document.getElementById('xlsxUpload').addEventListener('change', (e)=>{
+const _inpSup = document.getElementById('xlsxUpload');
+if(_inpSup) _inpSup.addEventListener('change', (e)=>{
   const f = e.target.files && e.target.files[0];
   if(f) handleXlsxFile(f);
   // permette di ricaricare lo stesso file dopo una modifica
@@ -1876,7 +1938,8 @@ function renderAnnualTable(containerId, rows, cols){
 });
 
 // Upload file annuale
-document.getElementById('annualUpload').addEventListener('change', (e) => {
+const _inpAnn = document.getElementById('annualUpload');
+if(_inpAnn) _inpAnn.addEventListener('change', (e) => {
   const f = e.target.files && e.target.files[0];
   if(f) handleAnnualFile(f);
   e.target.value = '';
@@ -1957,7 +2020,7 @@ function applySuperbonus2D(rows){
   if(AUTOLOAD_INIZIALE && nDateFoglio < DATES.length){
     throw new Error('il foglio contiene ' + nDateFoglio + ' rilevazioni mensili, meno delle '
       + DATES.length + ' gia presenti nella dashboard. Sono stati mantenuti i dati incorporati, '
-      + 'piu completi. Aggiorna il foglio Google, oppure premi "Aggiorna da Google" per forzare il caricamento.');
+      + 'piu completi. Aggiorna il foglio Google su Drive per allinearlo.');
   }
   for(const k of Object.keys(ENEA_DATA.data)) delete ENEA_DATA.data[k];
   Object.assign(ENEA_DATA.data, newData);
@@ -2144,8 +2207,8 @@ let AUTOLOAD_INIZIALE = false;
 
 async function loadFromGoogleSheets(opts){
   opts = opts || {};
-  const supUrl  = (opts.supUrl  != null ? opts.supUrl  : (document.getElementById('gsheetSupUrl').value  || '')).trim();
-  const annUrl  = (opts.annUrl  != null ? opts.annUrl  : (document.getElementById('gsheetAnnUrl').value  || '')).trim();
+  const supUrl  = (opts.supUrl  != null ? opts.supUrl  : (document.getElementById('gsheetSupUrl')?.value  || '')).trim();
+  const annUrl  = (opts.annUrl  != null ? opts.annUrl  : (document.getElementById('gsheetAnnUrl')?.value  || '')).trim();
   const provUrl = (opts.provUrl != null ? opts.provUrl : (document.getElementById('gsheetProvUrl')?.value || '')).trim();
   if(!supUrl && !annUrl && !provUrl){
     showUploadStatus('Incolla almeno un URL Google Sheet.', 'err');
@@ -2226,48 +2289,28 @@ async function loadFromGoogleSheets(opts){
   else showUploadStatus('Errore: ' + errs.join(' | '), 'err');
 }
 
-// Wiring dei bottoni e auto-load all'apertura
+// Aggiornamento automatico dai Fogli Google all'apertura.
+// Il pannello di caricamento e stato sostituito dai link a Drive: gli indirizzi
+// arrivano dalle costanti DEFAULT_* in cima allo script, o da quelli che
+// l'utente aveva salvato nel browser con una versione precedente.
 (function initGSheets(){
-  const supInp  = document.getElementById('gsheetSupUrl');
-  const annInp  = document.getElementById('gsheetAnnUrl');
-  const provInp = document.getElementById('gsheetProvUrl');
-  const btn     = document.getElementById('gsheetLoad');
-  if(!supInp || !annInp || !btn) return;
-
-  // Restore URL: localStorage (utente) → fallback DEFAULT_* (distribuzione)
-  let savedSup = '', savedAnn = '', savedProv = '';
+  let sup = '', ann = '', prov = '';
   try {
-    savedSup  = localStorage.getItem('gsheetSupUrl')  || '';
-    savedAnn  = localStorage.getItem('gsheetAnnUrl')  || '';
-    savedProv = localStorage.getItem('gsheetProvUrl') || '';
+    sup  = localStorage.getItem('gsheetSupUrl')  || '';
+    ann  = localStorage.getItem('gsheetAnnUrl')  || '';
+    prov = localStorage.getItem('gsheetProvUrl') || '';
   } catch(e){}
-  if(!savedSup  && typeof DEFAULT_GSHEET_SUP_URL  === 'string' && DEFAULT_GSHEET_SUP_URL)  savedSup  = DEFAULT_GSHEET_SUP_URL;
-  if(!savedAnn  && typeof DEFAULT_GSHEET_ANN_URL  === 'string' && DEFAULT_GSHEET_ANN_URL)  savedAnn  = DEFAULT_GSHEET_ANN_URL;
-  if(!savedProv && typeof DEFAULT_GSHEET_PROV_URL === 'string' && DEFAULT_GSHEET_PROV_URL) savedProv = DEFAULT_GSHEET_PROV_URL;
-  if(savedSup)  supInp.value  = savedSup;
-  if(savedAnn)  annInp.value  = savedAnn;
-  if(savedProv && provInp) provInp.value = savedProv;
-
-  const run = () => loadFromGoogleSheets().catch(err => {
-    console.error(err);
-    showUploadStatus('Errore: ' + (err.message || err), 'err');
-  });
-  btn.addEventListener('click', run);
-  [supInp, annInp, provInp].filter(Boolean).forEach(inp => {
-    inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); run(); } });
-  });
-
-  // Auto-load all'apertura
-  if(savedSup || savedAnn || savedProv){
-    setTimeout(() => {
-      AUTOLOAD_INIZIALE = true;
-      loadFromGoogleSheets({supUrl:savedSup, annUrl:savedAnn, provUrl:savedProv})
-        .catch(err => { console.warn('Auto-load Google Sheets fallito:', err); })
-        .finally(() => { AUTOLOAD_INIZIALE = false; });
-    }, 250);
-  }
+  if(!sup  && typeof DEFAULT_GSHEET_SUP_URL  === 'string') sup  = DEFAULT_GSHEET_SUP_URL;
+  if(!ann  && typeof DEFAULT_GSHEET_ANN_URL  === 'string') ann  = DEFAULT_GSHEET_ANN_URL;
+  if(!prov && typeof DEFAULT_GSHEET_PROV_URL === 'string') prov = DEFAULT_GSHEET_PROV_URL;
+  if(!sup && !ann && !prov) return;
+  setTimeout(() => {
+    AUTOLOAD_INIZIALE = true;
+    loadFromGoogleSheets({supUrl:sup, annUrl:ann, provUrl:prov})
+      .catch(err => { console.warn('Aggiornamento da Google non riuscito:', err); })
+      .finally(() => { AUTOLOAD_INIZIALE = false; });
+  }, 250);
 })();
-
 
 // =====================================================================
 // ============ SERIE STORICA: ANDAMENTO MENSILE PER REGIONE ===========
