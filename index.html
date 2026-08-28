@@ -4622,7 +4622,11 @@ function rpAnalisi(regione, iso, anno){
     const qe = pct(ed, edIta), qi = pct(inv, invIta);
     const medio = inv / ed, medioIta = invIta / edIta;
     const scarto = qi - qe;
-    const vm = rpVariazione(pct(medio - medioIta, medioIta));
+    const scartoMedio = pct(medio - medioIta, medioIta);
+    const vm = {verboS: scartoMedio >= 0 ? 'superiore' : 'inferiore',
+                quanto: rpArticoloNum(Math.abs(scartoMedio).toLocaleString('it-IT',
+                          {maximumFractionDigits: 1}), 'di')
+                        + Math.abs(scartoMedio).toLocaleString('it-IT', {maximumFractionDigits: 1}) + '%'};
     p.push(`Al <strong>${fmtItDate(iso)}</strong> ${rpConArt(regione)} conta <strong>${fmt(ed, 'int')}</strong> `
       + `edifici agevolati, ${rpPerc(qe, 'il')} del totale nazionale, e si colloca `
       + `${pos ? `al <strong>${pos.posizione}° posto</strong> fra le venti regioni` : 'nella graduatoria nazionale'}. `
