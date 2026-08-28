@@ -264,6 +264,105 @@
     .chart-wrap{height:230px !important}
     a{color:inherit; text-decoration:none}
   }
+  /* =====================================================================
+     SISTEMA DI COLORE PER FONTE DEL DATO
+     Il colore non decora la scheda: dice da dove viene il numero.
+       blu     -> Superbonus, dai report mensili ENEA
+       verde   -> Ecobonus e Province, dal Rapporto annuale (stessa fonte)
+       viola   -> Bonus Casa
+       ocra    -> Bonus Facciate
+       arancio -> Rapporto, l'unica scheda che attraversa tutte le fonti
+     Ogni tinta supera 4,5:1 sul fondo bianco, quindi regge anche come testo.
+     ===================================================================== */
+  .tabs .tab[data-tab="superbonus"],    #tab-superbonus    { --sez:#1f4e79; --sez-tenue:#eaf1f8 }
+  .tabs .tab[data-tab="andamento"],     #tab-andamento     { --sez:#1f4e79; --sez-tenue:#eaf1f8 }
+  .tabs .tab[data-tab="ecobonus"],      #tab-ecobonus      { --sez:#0f7a52; --sez-tenue:#e6f4ee }
+  .tabs .tab[data-tab="bonuscasa"],     #tab-bonuscasa     { --sez:#4a3aa7; --sez-tenue:#eeecf8 }
+  .tabs .tab[data-tab="bonusfacciate"], #tab-bonusfacciate { --sez:#9a6206; --sez-tenue:#f7efe0 }
+  .tabs .tab[data-tab="province"],      #tab-province      { --sez:#0b6444; --sez-tenue:#e6f2ed }
+  .tabs .tab[data-tab="rapporto"],      #tab-rapporto      { --sez:#c2521f; --sez-tenue:#fbeee7 }
+
+  /* ---- linguette ---- */
+  .tabs{background:#e9edf2; padding:8px 20px 0; gap:3px; border-bottom:1px solid #d8dee6}
+  .tab{background:#dfe5ec; color:#4b5768; border-radius:7px 7px 0 0; padding:9px 18px;
+    font-weight:600; font-size:.9rem; box-shadow:inset 0 -3px 0 rgba(0,0,0,.05);
+    transition:background .15s, color .15s, box-shadow .15s}
+  .tab:not(.active):hover{background:#d3dbe4; color:var(--sez)}
+  .tab.active{background:var(--card); color:var(--sez);
+    box-shadow:inset 0 3px 0 var(--sez), 0 -1px 4px rgba(0,0,0,.05)}
+
+  /* ---- schede e titoli ---- */
+  .card{border-radius:9px; box-shadow:0 1px 2px rgba(16,32,58,.05), 0 2px 10px rgba(16,32,58,.04)}
+  .card h3{color:var(--sez); font-size:1rem; letter-spacing:.1px;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .card h3::before{content:""; width:4px; height:1.02em; border-radius:2px;
+    background:var(--sez); flex:0 0 4px}
+  .filtri{background:linear-gradient(180deg, var(--sez-tenue) 0, var(--card) 120px)}
+  .filtri-tit{color:var(--sez); border-bottom-color:color-mix(in srgb, var(--sez) 30%, transparent)}
+
+  /* ---- indicatori numerici ---- */
+  .kpi{border-left:4px solid var(--sez); border-radius:0 9px 9px 0;
+    box-shadow:0 1px 2px rgba(16,32,58,.05), 0 2px 10px rgba(16,32,58,.04)}
+  .kpi .label{font-size:.7rem; letter-spacing:.7px}
+  .kpi .value{color:var(--sez); font-size:1.7rem; letter-spacing:-.4px}
+  .kpi.red{border-left-color:var(--accent)}
+  .kpi.red .value{color:var(--accent)}
+
+  /* ---- etichette e chip ---- */
+  .datebadge, .rp-badge{background:var(--sez-tenue); color:var(--sez)}
+  .ts-chip.on{background:var(--sez-tenue)}
+  .chip.on, .chip.active{border-color:var(--sez)}
+  .filtri .ctl label{color:#5b6879}
+  .filtri select, .filtri input[type=text]{border-radius:6px}
+  .filtri select:focus, .filtri input:focus{outline:2px solid color-mix(in srgb, var(--sez) 45%, transparent);
+    outline-offset:1px; border-color:var(--sez)}
+
+  /* ---- tabelle ---- */
+  table.cmp th{background:var(--sez-tenue); color:var(--sez); letter-spacing:.5px}
+  table.cmp tbody tr:hover td{background:color-mix(in srgb, var(--sez-tenue) 55%, #fff)}
+  table.cmp td{padding:7px 9px}
+
+  /* ---- testata ---- */
+  header{background:linear-gradient(100deg, #17415f 0%, var(--brand) 55%, #2a5f8f 100%);
+    box-shadow:0 2px 10px rgba(16,32,58,.16)}
+  header .title{font-size:1.12rem; letter-spacing:.2px}
+
+  /* ---- rapporto ---- */
+  .rp-testata{border-bottom-color:var(--sez)}
+  .rp-testata h1{color:var(--sez); font-size:1.55rem}
+  table.rp-tab th.rp-reg, table.rp-tab td.rp-reg{background:var(--sez-tenue); color:var(--sez)}
+  .rp-print{background:var(--sez)}
+  .rp-print:hover{filter:brightness(1.12)}
+
+  /* ---- blocchi di analisi ---- */
+  .rp-analisi p{font-size:.88rem; line-height:1.75; color:#334155; margin:0 0 10px}
+  .rp-analisi p:last-child{margin-bottom:0}
+  .rp-analisi strong{color:var(--sez)}
+  .rp-griglia{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px}
+  .rp-mini h4{margin:0 0 2px; font-size:.82rem; color:#334155}
+  .rp-mini .sotto{font-size:.72rem; color:var(--muted); margin-bottom:4px}
+
+  @media print{
+    /* Questo blocco arriva dopo quello del rapporto, quindi qui vanno
+       ripetute le misure compatte: altrimenti il padding piu generoso
+       pensato per lo schermo stringe le colonne sulla pagina stampata. */
+    table.cmp th, table.cmp td{padding:3px 5px}
+    table.rp-tab{font-size:8pt}
+    .card h3::before{width:3px}
+    .rp-testata h1{font-size:17pt}
+    .card h3{font-size:11pt}
+    .rp-analisi p{font-size:9pt; line-height:1.55}
+    header, .tabs{display:none !important}
+  }
+
+  /* ---- avviso ben visibile in cima a una scheda ---- */
+  .avviso{display:flex; gap:11px; align-items:flex-start; background:var(--sez-tenue);
+    border:1px solid color-mix(in srgb, var(--sez) 35%, transparent);
+    border-left:5px solid var(--sez); border-radius:8px; padding:12px 15px; margin-bottom:14px}
+  .avviso .segno{flex:0 0 22px; height:22px; border-radius:50%; background:var(--sez); color:#fff;
+    font-weight:700; font-size:.82rem; display:flex; align-items:center; justify-content:center}
+  .avviso .testo{font-size:.85rem; line-height:1.6; color:#334155}
+  .avviso .testo strong{color:var(--sez)}
 </style>
 </head>
 <body>
@@ -515,6 +614,28 @@
   </div>
 
   <div class="card" style="margin-top:14px">
+    <h3>Quanto è cresciuto ogni mese</h3>
+    <div class="hint">La linea qui sopra è cumulata e sale sempre, quindi negli ultimi anni sembra
+      ferma. Queste barre mostrano invece quanto si è aggiunto in ciascun mese: è così che si vede
+      quando la misura ha rallentato. Le barre rosse sono i mesi in cui il dato è sceso.</div>
+    <div class="ctl" style="max-width:280px; margin:10px 0 6px">
+      <label for="ts-flusso-area">Territorio</label>
+      <select id="ts-flusso-area"></select>
+    </div>
+    <div id="ts-flussi" style="height:300px"></div>
+    <div class="ts-note" id="ts-flussi-nota"></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h3>Peso sul totale nazionale</h3>
+    <div class="hint">Quota delle regioni selezionate sul dato italiano, mese per mese. I valori
+      assoluti crescono sempre e non dicono se una regione stia guadagnando o perdendo terreno:
+      questa quota sì.</div>
+    <div id="ts-quota" style="height:300px"></div>
+  </div>
+
+
+  <div class="card" style="margin-top:14px">
     <h3>Tabella della serie selezionata</h3>
     <div class="hint">Primo e ultimo valore disponibili nell'intervallo scelto, con la variazione fra i due. Le celle vuote indicano che ENEA non pubblicava quel parametro in quel mese.</div>
     <div id="ts-table"></div>
@@ -716,6 +837,11 @@
   <div class="contenuto">
 
 
+  <div class="avviso">
+    <div class="segno">!</div>
+    <div class="testo">Questa scheda mostra <strong>un solo anno, il 2022</strong>, e riguarda il solo <strong>Ecobonus</strong> — non il Superbonus. È l'unica annualità con dettaglio provinciale mai pubblicata da ENEA: i report mensili del Superbonus si fermano alla Regione, e nei Rapporti annuali le tabelle per provincia compaiono soltanto nell'edizione 2023. Verificato sulle edizioni 2024, 2025 e 2026, che non le contengono. Non è quindi possibile confrontare le province fra anni diversi né vedere il Superbonus a questo livello.</div>
+  </div>
+
   <div class="card viz" style="margin-bottom:14px">
     <h3>Confronto diretto fra territori</h3>
     <div class="hint">
@@ -830,6 +956,11 @@
     </div>
 
     <div class="card rp-blocco">
+      <h3>Lettura dei dati</h3>
+      <div class="rp-analisi" id="rp-analisi"></div>
+    </div>
+
+    <div class="card rp-blocco">
       <h3>Superbonus — tutti i parametri <span class="rp-badge" id="rp-badge-sb"></span></h3>
       <div class="hint" id="rp-fonte-sb"></div>
       <div id="rp-tab-sb"></div>
@@ -841,6 +972,14 @@
         sono percentuali, quindi condividono la stessa scala: dice se il peso della regione è
         cresciuto o calato, cosa che i valori assoluti, sempre crescenti, non mostrano.</div>
       <div id="rp-grafico" style="height:300px"></div>
+    </div>
+
+    <div class="card rp-blocco rp-corto">
+      <h3>Su cosa si concentra l'investimento</h3>
+      <div class="hint">Composizione degli investimenti ammessi a detrazione per tipo di immobile.
+        Le barre sono tutte lunghe uguale perché mostrano le proporzioni, non gli importi: servono
+        a confrontare la regione con aree di taglia molto diversa.</div>
+      <div id="rp-composizione" style="min-height:230px"></div>
     </div>
 
     <div class="card rp-blocco">
@@ -859,6 +998,13 @@
       <h3>Bonus Facciate <span class="rp-badge" id="rp-badge-bf"></span></h3>
       <div class="hint" id="rp-fonte-bf"></div>
       <div id="rp-tab-bf"></div>
+    </div>
+
+    <div class="card rp-blocco rp-corto">
+      <h3>I bonus annuali nel tempo</h3>
+      <div class="hint">Andamento della regione sulle annualità disponibili. Il Bonus Facciate è
+        agevolazione scaduta a fine 2022: quel che resta sono i lavori conclusi in coda.</div>
+      <div class="rp-griglia" id="rp-mini-annuali"></div>
     </div>
 
     <div class="card rp-blocco rp-corto rp-note">
@@ -2813,6 +2959,8 @@ function renderAndamento(){
 
   renderAndamentoKPI(key, param);
   renderAndamentoTabella(date, key, param);
+  renderFlussi();
+  renderQuota();
 }
 
 function renderAndamentoKPI(key, param){
@@ -2907,6 +3055,9 @@ function renderAndamentoTabella(date, key, param){
 
   const chk = document.getElementById('ts-italia');
   chk.addEventListener('change', e => { TS.showItalia = e.target.checked; renderAndamento(); });
+
+  const selFlusso = document.getElementById('ts-flusso-area');
+  if(selFlusso) selFlusso.addEventListener('change', renderFlussi);
 
   document.querySelectorAll('[data-ts-preset]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3219,14 +3370,21 @@ function rpMacroDi(regione){
   return m ? m.chiave : null;
 }
 
-/** Percentuale con l'articolo giusto: l'8%, l'11%, ma il 7% e il 12%. */
+/** Percentuale con l'articolo giusto: l'1%, lo 0,5%, l'8%, l'11%, il 7%. */
+function rpArticoloNum(s, forma){
+  // Conta come si legge il numero, non la prima cifra: 14 e 18 si leggono
+  // "quattordici" e "diciotto" e vogliono "il"; 1, 11 e tutti gli "otto..."
+  // (8, 8,4, 80) cominciano per vocale e vogliono l'elisione.
+  const zero = /^0(?![1-9])/.test(s);
+  const vocale = !zero && (/^1(?!\d)/.test(s) || /^11(?!\d)/.test(s) || /^8/.test(s));
+  if(forma === 'a')   return zero ? 'allo ' : vocale ? "all'" : 'al ';
+  if(forma === 'di')  return zero ? 'dello ' : vocale ? "dell'" : 'del ';
+  return zero ? 'lo ' : vocale ? "l'" : 'il ';
+}
+
 function rpPerc(v, articolo){
   const s = v.toLocaleString('it-IT', {maximumFractionDigits: 1});
-  const vocale = /^(8|11)/.test(s);
-  const art = articolo === 'a' ? (vocale ? "all'" : 'al ')
-            : articolo === 'il' ? (vocale ? "l'" : 'il ')
-            : '';
-  return art + s + '%';
+  return (articolo ? rpArticoloNum(s, articolo === 'a' ? 'a' : 'il') : '') + s + '%';
 }
 
 /** fmt() conosce interi ed euro; le grandezze fisiche vogliono i decimali. */
@@ -3497,6 +3655,7 @@ function renderRapporto(){
     + ` · elaborazione su dati ENEA, ${fmtItDate(new Date().toISOString().slice(0, 10))}`;
 
   document.getElementById('rp-sintesi').innerHTML = rpSintesi(regione, iso, anno);
+  document.getElementById('rp-analisi').innerHTML = rpAnalisi(regione, iso, anno);
 
   document.getElementById('rp-badge-sb').textContent = fmtItDate(iso);
   document.getElementById('rp-fonte-sb').innerHTML =
@@ -3526,6 +3685,8 @@ function renderRapporto(){
   document.getElementById('rp-note-lista').innerHTML = note.map(n => '<li>' + n + '</li>').join('');
 
   rpGrafico(regione);
+  rpComposizione(regione, iso);
+  rpMiniAnnuali(regione);
 }
 
 (function initRapporto(){
@@ -3557,6 +3718,462 @@ function renderRapporto(){
 
 
 })();
+
+// =====================================================================
+// ============ DISEGNO IN SVG (leggibile anche in stampa) =============
+// =====================================================================
+// I grafici aggiunti qui sono disegnati in SVG e non su tela: un SVG si
+// riscala da solo quando la pagina passa alla stampa, mentre una tela va
+// ridisegnata a mano e, se l'evento non arriva, esce tagliata.
+
+const SVG_W = 900, SVG_H = 300;
+
+/** Passo "tondo" per le tacche dell'asse: 1, 2, 2,5 o 5 per una potenza di 10.
+    Senza, le tacche cadono su valori come 2.180 o -243, che nessuno legge. */
+function svgPasso(intervallo, quante){
+  const grezzo = intervallo / Math.max(1, quante);
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.abs(grezzo) || 1)));
+  const n = grezzo / mag;
+  const bello = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+  return bello * mag;
+}
+
+/** Tacche arrotondate che coprono l'intervallo dei dati. */
+function svgTacche(min, max, quante){
+  const passo = svgPasso(max - min, quante);
+  const da = Math.floor(min / passo) * passo;
+  const a = Math.ceil(max / passo) * passo;
+  const out = [];
+  for(let v = da; v <= a + passo / 1000; v += passo) out.push(Math.abs(v) < passo / 1e6 ? 0 : v);
+  return {tacche: out, min: da, max: a};
+}
+
+function svgTesto(x, y, testo, opz){
+  const o = opz || {};
+  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" `
+       + `text-anchor="${o.ancora || 'middle'}" font-size="${o.dim || 11}" `
+       + `${o.peso ? `font-weight="${o.peso}" ` : ''}fill="${o.colore || '#6b7280'}">${testo}</text>`;
+}
+
+/** Etichette di fine linea distanziate, cosi non si sovrappongono mai. */
+function svgEtichetteFinali(voci, x){
+  voci.sort((a, b) => a.y - b.y);
+  let minimo = -Infinity, out = '';
+  for(const v of voci){
+    const y = Math.max(v.y, minimo + 13);
+    minimo = y;
+    out += svgTesto(x(v.i) + 7, y + 4, v.testo, {ancora: 'start', dim: 11, peso: 600, colore: v.colore});
+  }
+  return out;
+}
+
+/** Grafico a linee: piu serie, un solo asse, buchi rispettati. */
+function svgLinee(box, etichette, serie, opz){
+  const el = typeof box === 'string' ? document.getElementById(box) : box;
+  if(!el) return;
+  const o = Object.assign({unita: '', dec: 1, passoX: 12, daZero: false}, opz || {});
+  const L = 58, R = o.margineDestro || 104, T = 26, B = 34;
+
+  const validi = serie.flatMap(s => s.punti).filter(v => v !== null && v !== undefined);
+  if(!validi.length){ el.innerHTML = '<p class="ts-note">Dati non disponibili.</p>'; return; }
+  let min = Math.min(...validi), max = Math.max(...validi);
+  if(o.daZero) min = Math.min(0, min);
+  const margine = (max - min) * 0.12 || Math.abs(max) * 0.1 || 1;
+  min = o.daZero ? min : min - margine;
+  max = max + margine;
+
+  const x = i => L + (SVG_W - L - R) * (etichette.length < 2 ? 0 : i / (etichette.length - 1));
+  const y = v => SVG_H - B - (SVG_H - T - B) * (max === min ? 0.5 : (v - min) / (max - min));
+  const num = v => v.toLocaleString('it-IT', {maximumFractionDigits: o.dec}) + o.unita;
+
+  let svg = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" width="100%" height="100%" `
+          + `preserveAspectRatio="xMidYMid meet" role="img" aria-label="${o.titolo || 'grafico'}">`;
+  for(const v of svgTacche(min, max, 5).tacche){
+    if(v < min || v > max) continue;
+    svg += `<line x1="${L}" y1="${y(v).toFixed(1)}" x2="${SVG_W - R}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/>`
+         + svgTesto(L - 8, y(v) + 3.5, num(v), {ancora: 'end'});
+  }
+  etichette.forEach((e, i) => {
+    if(i % o.passoX && i !== etichette.length - 1) return;
+    svg += svgTesto(x(i), SVG_H - B + 16, e);
+  });
+  svg += `<line x1="${L}" y1="${SVG_H - B}" x2="${SVG_W - R}" y2="${SVG_H - B}" stroke="#cbd5e1"/>`;
+
+  const finali = [];
+  for(const s of serie){
+    let tratto = [];
+    const chiudi = () => {
+      if(tratto.length > 1){
+        svg += `<polyline fill="none" stroke="${s.colore}" stroke-width="${s.spessore || 2}" `
+             + `${s.tratteggio ? 'stroke-dasharray="6 3" ' : ''}stroke-linejoin="round" `
+             + `points="${tratto.join(' ')}"/>`;
+      }else if(tratto.length === 1){
+        const [px, py] = tratto[0].split(',');
+        svg += `<circle cx="${px}" cy="${py}" r="2.5" fill="${s.colore}"/>`;
+      }
+      tratto = [];
+    };
+    s.punti.forEach((v, i) => {
+      if(v === null || v === undefined) chiudi();
+      else tratto.push(`${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+    });
+    chiudi();
+    let ultimo = null;
+    for(let i = s.punti.length - 1; i >= 0; i--){
+      if(s.punti[i] !== null && s.punti[i] !== undefined){ ultimo = i; break; }
+    }
+    if(ultimo !== null){
+      finali.push({i: ultimo, y: y(s.punti[ultimo]), colore: s.colore,
+                   testo: `${s.sigla || s.nome} ${num(s.punti[ultimo])}`});
+    }
+  }
+  svg += svgEtichetteFinali(finali, x);
+
+  let lx = L;
+  for(const s of serie){
+    svg += `<line x1="${lx}" y1="${T - 12}" x2="${lx + 18}" y2="${T - 12}" stroke="${s.colore}" `
+         + `stroke-width="2" ${s.tratteggio ? 'stroke-dasharray="6 3"' : ''}/>`
+         + svgTesto(lx + 24, T - 8, s.nome, {ancora: 'start', colore: '#334155'});
+    lx += 32 + s.nome.length * 6.2;
+  }
+  el.innerHTML = svg + '</svg>';
+}
+
+/** Barre verticali con segno: sopra lo zero in blu, sotto in rosso. */
+function svgBarre(box, etichette, valori, opz){
+  const el = typeof box === 'string' ? document.getElementById(box) : box;
+  if(!el) return;
+  const o = Object.assign({dec: 0, unita: '', passoX: 12, kind: null}, opz || {});
+  const L = 66, R = 16, T = 18, B = 34;
+  const validi = valori.filter(v => v !== null && v !== undefined);
+  if(!validi.length){ el.innerHTML = '<p class="ts-note">Dati non disponibili.</p>'; return; }
+  const grezzo = svgTacche(Math.min(0, ...validi), Math.max(0, ...validi), 5);
+  const max = grezzo.max, min = grezzo.min;
+  const span = (max - min) || 1;
+  const x = i => L + (SVG_W - L - R) * (i + 0.5) / valori.length;
+  const y = v => SVG_H - B - (SVG_H - T - B) * (v - min) / span;
+  const larg = Math.max(2, (SVG_W - L - R) / valori.length * 0.72);
+  const etichettaNum = v => o.kind ? fmt(v, o.kind)
+        : v.toLocaleString('it-IT', {maximumFractionDigits: o.dec}) + o.unita;
+
+  let svg = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" width="100%" height="100%" `
+          + `preserveAspectRatio="xMidYMid meet" role="img" aria-label="${o.titolo || 'grafico a barre'}">`;
+  for(const v of grezzo.tacche){
+    svg += `<line x1="${L}" y1="${y(v).toFixed(1)}" x2="${SVG_W - R}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/>`
+         + svgTesto(L - 8, y(v) + 3.5, etichettaNum(v), {ancora: 'end', dim: 10});
+  }
+  valori.forEach((v, i) => {
+    if(v === null || v === undefined) return;
+    const alto = Math.abs(y(v) - y(0));
+    svg += `<rect x="${(x(i) - larg / 2).toFixed(1)}" y="${(v >= 0 ? y(v) : y(0)).toFixed(1)}" `
+         + `width="${larg.toFixed(1)}" height="${Math.max(0.8, alto).toFixed(1)}" rx="1.5" `
+         + `fill="${v >= 0 ? '#2a78d6' : '#e34948'}"><title>${etichette[i]}: ${etichettaNum(v)}</title></rect>`;
+  });
+  svg += `<line x1="${L}" y1="${y(0).toFixed(1)}" x2="${SVG_W - R}" y2="${y(0).toFixed(1)}" stroke="#94a3b8"/>`;
+  etichette.forEach((e, i) => {
+    if(i % o.passoX && i !== etichette.length - 1) return;
+    svg += svgTesto(x(i), SVG_H - B + 16, e, {dim: 10});
+  });
+  el.innerHTML = svg + '</svg>';
+}
+
+/** Barre orizzontali impilate al 100%: mostra la composizione, non la taglia. */
+function svgImpilate(box, righe, categorie){
+  const el = typeof box === 'string' ? document.getElementById(box) : box;
+  if(!el) return;
+  const H = 42 + righe.length * 40, L = 118, R = 20, T = 34;
+  let svg = `<svg viewBox="0 0 ${SVG_W} ${H}" width="100%" height="100%" `
+          + `preserveAspectRatio="xMidYMid meet" role="img" aria-label="composizione per tipo di immobile">`;
+  let lx = L;
+  categorie.forEach(c => {
+    svg += `<rect x="${lx}" y="${T - 24}" width="11" height="11" rx="2" fill="${c.colore}"/>`
+         + svgTesto(lx + 16, T - 14, c.nome, {ancora: 'start', colore: '#334155'});
+    lx += 30 + c.nome.length * 6.4;
+  });
+  righe.forEach((r, i) => {
+    const y = T + i * 40;
+    const tot = categorie.reduce((s, c) => s + (r.valori[c.key] || 0), 0);
+    svg += svgTesto(L - 10, y + 18, r.nome,
+                    {ancora: 'end', dim: 11.5, peso: r.evidenzia ? 700 : 400,
+                     colore: r.evidenzia ? '#1a2033' : '#475569'});
+    if(!tot){ svg += svgTesto(L + 6, y + 18, 'dato non disponibile', {ancora: 'start', dim: 10.5}); return; }
+    let cx = L;
+    categorie.forEach(c => {
+      const q = (r.valori[c.key] || 0) / tot;
+      const w = (SVG_W - L - R) * q;
+      if(w <= 0) return;
+      svg += `<rect x="${cx.toFixed(1)}" y="${y}" width="${Math.max(0, w - 2).toFixed(1)}" height="26" `
+           + `rx="2" fill="${c.colore}"><title>${r.nome} — ${c.nome}: `
+           + `${(q * 100).toLocaleString('it-IT', {maximumFractionDigits: 1})}%</title></rect>`;
+      if(w > 46){
+        svg += svgTesto(cx + w / 2 - 1, y + 17,
+                        (q * 100).toLocaleString('it-IT', {maximumFractionDigits: 1}) + '%',
+                        {dim: 10.5, peso: 600, colore: '#fff'});
+      }
+      cx += w;
+    });
+  });
+  el.innerHTML = svg + '</svg>';
+}
+
+// =====================================================================
+// ============ SERIE STORICA: FLUSSI MENSILI E PESO ===================
+// =====================================================================
+
+/** Differenze fra un mese e il precedente: i "nuovi" del mese. */
+function tsFlussi(area, key, date){
+  const out = [];
+  for(let i = 0; i < date.length; i++){
+    const v = tsValore(area, date[i], key);
+    const p = i > 0 ? tsValore(area, date[i - 1], key) : null;
+    out.push(v === null || p === null ? null : v - p);
+  }
+  return out;
+}
+
+function renderFlussi(){
+  const sel = document.getElementById('ts-flusso-area');
+  if(!sel) return;
+  const param = PARAMETERS[TS.paramIdx];
+  const date = tsDate();
+  const aree = TS.selezione.concat(TS.showItalia ? ['Italia'] : []);
+  const prec = sel.value;
+  sel.innerHTML = '';
+  aree.forEach(a => {
+    const o = document.createElement('option');
+    o.value = a; o.textContent = a;
+    sel.appendChild(o);
+  });
+  if(!aree.length){
+    document.getElementById('ts-flussi').innerHTML =
+      '<p class="ts-note">Seleziona almeno una regione, oppure attiva la linea Italia.</p>';
+    return;
+  }
+  sel.value = aree.includes(prec) ? prec : aree[0];
+  const area = sel.value;
+
+  const valori = tsFlussi(area, param.key, date);
+  svgBarre('ts-flussi', date.map(fmtItDate), valori,
+           {kind: param.fmt, titolo: 'variazione mese su mese'});
+
+  const noti = valori.filter(v => v !== null);
+  const nota = document.getElementById('ts-flussi-nota');
+  if(nota){
+    if(!noti.length){ nota.textContent = ''; return; }
+    const iMax = valori.indexOf(Math.max(...noti));
+    const negativi = noti.filter(v => v < 0).length;
+    const ultimi = noti.slice(-12);
+    const media = ultimi.reduce((s, v) => s + v, 0) / ultimi.length;
+    nota.innerHTML = `Mese di maggiore incremento: <strong>${fmtItDate(date[iMax])}</strong> `
+      + `con ${fmt(valori[iMax], param.fmt)}. Media degli ultimi ${ultimi.length} mesi rilevati: `
+      + `${fmt(media, param.fmt)}.`
+      + (negativi ? ` In ${negativi} mesi il valore è diminuito: sono le revisioni di ENEA, `
+                  + `non un errore di calcolo.` : '');
+  }
+}
+
+function renderQuota(){
+  const param = PARAMETERS[TS.paramIdx];
+  const date = tsDate();
+  const serie = TS.selezione.map(r => ({
+    nome: r, sigla: tsSigla(r), colore: tsColore(r),
+    punti: date.map(d => {
+      const v = tsValore(r, d, param.key), i = tsValore('Italia', d, param.key);
+      return (v === null || !i) ? null : v / i * 100;
+    }),
+  }));
+  if(!serie.length){
+    document.getElementById('ts-quota').innerHTML =
+      '<p class="ts-note">Seleziona almeno una regione per vedere il suo peso sul totale nazionale.</p>';
+    return;
+  }
+  svgLinee('ts-quota', date.map(fmtItDate), serie,
+           {unita: '%', dec: 1, titolo: 'peso sul totale nazionale'});
+}
+
+// =====================================================================
+// ============ RAPPORTO: COMPOSIZIONE, ANDAMENTI, ANALISI =============
+// =====================================================================
+
+const RP_TIPI = [
+  {key: 'cond',   nome: 'Condomini',              art: 'i',  colore: '#2a78d6'},
+  {key: 'unifam', nome: 'Edifici unifamiliari',   art: 'gli', colore: '#eb6834'},
+  {key: 'indip',  nome: 'Unità indipendenti',     art: 'le', colore: '#1baf7a'},
+  {key: 'a9',     nome: 'A/9 aperti al pubblico', art: 'gli', colore: '#4a3aa7'},
+];
+
+// L'analisi e scritta in italiano corrente: senza gli articoli giusti davanti
+// ai nomi propri di regione le frasi risultano sgrammaticate.
+const RP_ARTICOLI = {
+  'Abruzzo': "l'", 'Basilicata': 'la ', 'Calabria': 'la ', 'Campania': 'la ',
+  'Emilia-Romagna': "l'", 'Friuli-Venezia Giulia': 'il ', 'Lazio': 'il ',
+  'Liguria': 'la ', 'Lombardia': 'la ', 'Marche': 'le ', 'Molise': 'il ',
+  'Piemonte': 'il ', 'Puglia': 'la ', 'Sardegna': 'la ', 'Sicilia': 'la ',
+  'Toscana': 'la ', 'Trentino-Alto Adige': 'il ', 'Umbria': "l'",
+  "Valle d'Aosta": 'la ', 'Veneto': 'il ',
+};
+function rpConArt(r, maiuscola){
+  const a = RP_ARTICOLI[r] || '';
+  return (maiuscola ? a.charAt(0).toUpperCase() + a.slice(1) : a) + r;
+}
+
+/** "cresciuti del 2%" / "diminuiti dello 0,2%": il segno diventa un verbo. */
+function rpVariazione(v, dec){
+  const n = Math.abs(v).toLocaleString('it-IT', {maximumFractionDigits: dec === undefined ? 1 : dec});
+  return {verbo: v >= 0 ? 'cresciuti' : 'diminuiti',
+          verboS: v >= 0 ? 'cresciuto' : 'diminuito',
+          quanto: rpArticoloNum(n, 'di') + n + '%'};
+}
+
+function rpValoriTipo(iso, regioni){
+  const v = {};
+  for(const t of RP_TIPI) v[t.key] = rpSommaSup(iso, regioni, t.key + '_inv_ammesso') || 0;
+  return v;
+}
+
+function rpComposizione(regione, iso){
+  const righe = [
+    {nome: regione, valori: rpValoriTipo(iso, [regione]), evidenzia: true},
+    {nome: 'Nord',        valori: rpValoriTipo(iso, NORD)},
+    {nome: 'Centro',      valori: rpValoriTipo(iso, CENTRO)},
+    {nome: 'Sud e Isole', valori: rpValoriTipo(iso, SUD)},
+    {nome: 'Italia',      valori: rpValoriTipo(iso, REGIONS)},
+  ];
+  svgImpilate('rp-composizione', righe, RP_TIPI);
+}
+
+function rpMiniAnnuali(regione){
+  const box = document.getElementById('rp-mini-annuali');
+  if(!box) return;
+  const blocchi = [
+    {titolo: 'Ecobonus',       sotto: 'investimenti attivati, M€', righe: ANNUAL.Ecobonus,       campo: 'investimenti_MEUR', dec: 1},
+    {titolo: 'Bonus Casa',     sotto: 'numero di interventi',      righe: ANNUAL.Bonus_Casa,     campo: 'n_interventi',      dec: 0},
+    {titolo: 'Bonus Facciate', sotto: 'investimenti, M€',          righe: ANNUAL.Bonus_Facciate, campo: 'investimento_MEUR', dec: 1},
+  ];
+  box.innerHTML = blocchi.map((b, i) =>
+    `<div class="rp-mini"><h4>${b.titolo}</h4><div class="sotto">${b.sotto} · ${regione}</div>`
+    + `<div id="rp-mini-${i}" style="height:150px"></div></div>`).join('');
+  blocchi.forEach((b, i) => {
+    const anni = Array.from(new Set(b.righe.map(r => Number(r.anno)))).sort();
+    const valori = anni.map(a => rpSommaAnn(b.righe, a, [regione], b.campo));
+    svgBarre(`rp-mini-${i}`, anni.map(String), valori,
+             {dec: b.dec, passoX: 1, titolo: b.titolo});
+  });
+}
+
+/** Testo di analisi: ogni frase nasce da un confronto fatto sui numeri. */
+function rpAnalisi(regione, iso, anno){
+  const p = [];
+  const macro = rpMacroDi(regione);
+  const regioniMacro = (RP_MACRO.find(x => x.chiave === macro) || {}).regioni || [];
+  const pct = (a, b) => (b ? a / b * 100 : null);
+  const num = (v, d) => v === null || v === undefined ? '—'
+        : v.toLocaleString('it-IT', {maximumFractionDigits: d === undefined ? 1 : d});
+
+  // --- posizionamento e investimento medio
+  const ed = rpSommaSup(iso, [regione], 'n_edifici_totale');
+  const edIta = rpItaliaSup(iso, 'n_edifici_totale');
+  const inv = rpSommaSup(iso, [regione], 'investimenti_ammessi_totale');
+  const invIta = rpItaliaSup(iso, 'investimenti_ammessi_totale');
+  const pos = rpPosizione(iso, regione, 'n_edifici_totale');
+  if(ed && edIta && inv && invIta){
+    const qe = pct(ed, edIta), qi = pct(inv, invIta);
+    const medio = inv / ed, medioIta = invIta / edIta;
+    const scarto = qi - qe;
+    const vm = rpVariazione(pct(medio - medioIta, medioIta));
+    p.push(`Al <strong>${fmtItDate(iso)}</strong> ${rpConArt(regione)} conta <strong>${fmt(ed, 'int')}</strong> `
+      + `edifici agevolati, ${rpPerc(qe, 'il')} del totale nazionale, e si colloca `
+      + `${pos ? `al <strong>${pos.posizione}° posto</strong> fra le venti regioni` : 'nella graduatoria nazionale'}. `
+      + `Sugli investimenti ammessi pesa ${rpPerc(qi, 'il')}, `
+      + (Math.abs(scarto) < 0.15
+          ? 'una quota in linea con quella degli edifici. '
+          : `${num(Math.abs(scarto))} punti ${scarto > 0 ? 'in più' : 'in meno'} rispetto alla quota di edifici. `)
+      + `L'investimento medio per edificio è di <strong>${fmt(medio, 'eur')}</strong> contro `
+      + `${fmt(medioIta, 'eur')} in Italia: ${vm.verboS} ${vm.quanto}.`);
+  }
+
+  // --- composizione a confronto
+  const cr = rpValoriTipo(iso, [regione]), ci = rpValoriTipo(iso, REGIONS);
+  const totR = Object.values(cr).reduce((s, v) => s + v, 0);
+  const totI = Object.values(ci).reduce((s, v) => s + v, 0);
+  if(totR && totI){
+    const voci = RP_TIPI.filter(t => t.key !== 'a9').map(t => ({
+      nome: t.nome.toLowerCase(), art: t.art,
+      r: pct(cr[t.key], totR), i: pct(ci[t.key], totI),
+    }));
+    voci.sort((a, b) => Math.abs(b.r - b.i) - Math.abs(a.r - a.i));
+    const v0 = voci[0];
+    p.push(`Guardando come si distribuiscono gli investimenti, ${v0.art} `
+      + `<strong>${v0.nome}</strong> assorbono ${rpPerc(v0.r, 'il')} del totale regionale contro `
+      + `${rpPerc(v0.i, 'il')} nazionale: è lo scostamento più marcato, `
+      + `${num(Math.abs(v0.r - v0.i))} punti. `
+      + voci.slice(1).map((v, k) =>
+          `${k === 0 ? v.art.charAt(0).toUpperCase() + v.art.slice(1) : v.art} ${v.nome} `
+          + `pesano ${rpPerc(v.r, 'il')} (Italia ${num(v.i)}%)`).join('; ') + '.');
+  }
+
+  // --- come si e mosso il peso nel tempo
+  const conQuota = DATES.filter(d => rpSommaSup(d, [regione], 'n_edifici_totale') !== null
+                                  && rpItaliaSup(d, 'n_edifici_totale'));
+  if(conQuota.length > 2){
+    const primo = conQuota[0], ultimo = conQuota[conQuota.length - 1];
+    const q1 = pct(rpSommaSup(primo, [regione], 'n_edifici_totale'), rpItaliaSup(primo, 'n_edifici_totale'));
+    const q2 = pct(rpSommaSup(ultimo, [regione], 'n_edifici_totale'), rpItaliaSup(ultimo, 'n_edifici_totale'));
+    const d = q2 - q1;
+    const i12 = Math.max(0, conQuota.length - 13);
+    const a12 = rpSommaSup(conQuota[i12], [regione], 'n_edifici_totale');
+    const b12 = rpSommaSup(ultimo, [regione], 'n_edifici_totale');
+    const ai = rpItaliaSup(conQuota[i12], 'n_edifici_totale');
+    const bi = rpItaliaSup(ultimo, 'n_edifici_totale');
+    let testo = `Nel tempo il peso della regione è passato ${rpPerc(q1, 'a').replace('al ', 'dal ').replace("all'", "dall'")} `
+      + `di ${fmtItDate(primo)} ${rpPerc(q2, 'a')} di ${fmtItDate(ultimo)}, `
+      + (Math.abs(d) < 0.05 ? 'sostanzialmente stabile.'
+         : `${num(Math.abs(d))} punti ${d > 0 ? 'in più' : 'in meno'}.`);
+    if(a12 && b12 && ai && bi){
+      const vr = rpVariazione(pct(b12 - a12, a12), 2), vi = rpVariazione(pct(bi - ai, ai), 2);
+      testo += ` Negli ultimi dodici mesi rilevati gli edifici della regione sono `
+        + `${vr.verbo} ${vr.quanto}, quelli italiani ${vi.verbo} ${vi.quanto}.`;
+    }
+    p.push(testo);
+  }
+
+  // --- confronto interno all'area
+  const edMacro = rpSommaSup(iso, regioniMacro, 'n_edifici_totale');
+  if(ed && edMacro && regioniMacro.length > 1){
+    const ordinate = regioniMacro
+      .map(r => ({r, v: rpSommaSup(iso, [r], 'n_edifici_totale') || 0}))
+      .sort((a, b) => b.v - a.v);
+    const posMacro = ordinate.findIndex(x => x.r === regione) + 1;
+    const capofila = ordinate[0];
+    p.push(`Dentro l'area <strong>${macro}</strong>, che raccoglie ${regioniMacro.length} regioni, `
+      + `${rpConArt(regione)} occupa il ${posMacro}° posto con ${rpPerc(pct(ed, edMacro), 'il')} `
+      + `degli edifici`
+      + (capofila.r === regione
+          ? " ed è la regione capofila dell'area."
+          : `; in testa c'è ${rpConArt(capofila.r)} con ${rpPerc(pct(capofila.v, edMacro), 'il')}.`));
+  }
+
+  // --- bonus annuali: dal primo anno all'ultimo
+  const anni = Array.from(new Set(ANNUAL.Ecobonus.map(r => Number(r.anno)))).sort();
+  if(anni.length > 1){
+    const a0 = anni[0], a1 = anni[anni.length - 1];
+    const frasi = [];
+    for(const b of [{n: 'Ecobonus', art: "l'", righe: ANNUAL.Ecobonus, campo: 'investimenti_MEUR', u: ' M€'},
+                    {n: 'Bonus Facciate', art: 'il ', righe: ANNUAL.Bonus_Facciate, campo: 'investimento_MEUR', u: ' M€'}]){
+      const v0 = rpSommaAnn(b.righe, a0, [regione], b.campo);
+      const v1 = rpSommaAnn(b.righe, a1, [regione], b.campo);
+      if(v0 && v1 !== null){
+        const vv = rpVariazione(pct(v1 - v0, v0));
+        frasi.push(`${b.art}<strong>${b.n}</strong> è passato da ${num(v0)}${b.u} nel ${a0} a `
+          + `${num(v1)}${b.u} nel ${a1}, ${vv.verboS} ${vv.quanto}`);
+      }
+    }
+    if(frasi.length) p.push('Sui bonus annuali ' + frasi.join('; ') + '.');
+  }
+
+  return p.length ? p.map(t => `<p>${t}</p>`).join('')
+                  : '<p class="ts-note">Dati insufficienti per l\'analisi.</p>';
+}
 
 // ============ BOOTSTRAP ============
 // Se i dati annuali sono embedded (ANNUAL_EMBEDDED), pre-popola selettori e rendering
