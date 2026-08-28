@@ -243,9 +243,21 @@
     main > section{display:none !important}
     main > section#tab-rapporto{display:block !important}
     #tab-rapporto .contenuto{overflow:visible; padding:0; display:block}
-    .card{box-shadow:none; border:1px solid #d5dae2; break-inside:avoid; page-break-inside:avoid}
-    .rp-blocco{break-inside:avoid}
-    table.rp-tab{font-size:9pt}
+    .card{box-shadow:none; border:1px solid #d5dae2}
+    /* Le schede corte non vanno spezzate; quelle con tabelle lunghe si devono
+       poter dividere fra le pagine, altrimenti vengono spinte tutte in avanti
+       e la prima pagina resta mezza vuota. */
+    .rp-blocco{break-inside:auto}
+    .rp-blocco.rp-corto{break-inside:avoid; page-break-inside:avoid}
+    .rp-blocco h3{break-after:avoid}
+    .rp-blocco > div[style*="overflow"]{overflow:visible !important}
+    table.rp-tab{font-size:8.2pt}
+    table.rp-tab thead{display:table-header-group}   /* intestazione ripetuta a ogni pagina */
+    table.rp-tab tr{break-inside:avoid; page-break-inside:avoid}
+    table.cmp th, table.cmp td{padding:4px 6px}
+    /* Gli importi non devono spezzarsi fra la cifra e il simbolo di valuta */
+    table.rp-tab td, table.rp-tab th{white-space:nowrap}
+    table.rp-tab td.rp-par{white-space:normal}
     table.cmp th{background:#eef2f7 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
     table.rp-tab th.rp-reg, table.rp-tab td.rp-reg{background:#eef4fb !important;
       -webkit-print-color-adjust:exact; print-color-adjust:exact}
@@ -799,7 +811,9 @@
     </div>
     <div class="ts-note">
       Il pulsante apre la stampa del browser: scegliendo «Salva come PDF» si ottiene
-      il rapporto impaginato, senza menu né filtri.
+      il rapporto impaginato, senza menu né filtri. Per togliere data, indirizzo e
+      numero di pagina che Chrome aggiunge ai margini, apri «Altre impostazioni»
+      nella finestra di stampa e togli la spunta a «Intestazioni e piè di pagina».
     </div>
   </aside>
 
@@ -810,7 +824,7 @@
       <div class="rp-sotto" id="rp-sottotitolo"></div>
     </div>
 
-    <div class="card rp-blocco">
+    <div class="card rp-blocco rp-corto">
       <h3>In sintesi</h3>
       <div id="rp-sintesi"></div>
     </div>
@@ -821,7 +835,7 @@
       <div id="rp-tab-sb"></div>
     </div>
 
-    <div class="card rp-blocco">
+    <div class="card rp-blocco rp-corto">
       <h3>Superbonus — peso della regione sul totale nazionale</h3>
       <div class="hint">Quota della regione sul dato italiano, mese per mese. Entrambe le linee
         sono percentuali, quindi condividono la stessa scala: dice se il peso della regione è
@@ -847,7 +861,7 @@
       <div id="rp-tab-bf"></div>
     </div>
 
-    <div class="card rp-blocco rp-note">
+    <div class="card rp-blocco rp-corto rp-note">
       <h3>Note di lettura</h3>
       <ul id="rp-note-lista"></ul>
     </div>
@@ -938,7 +952,7 @@ const PARAMETERS = [
 ];
 
 // ============ FORMATTING ============
-const fmtInt = new Intl.NumberFormat('it-IT', {maximumFractionDigits:0});
+const fmtInt = new Intl.NumberFormat('it-IT', {maximumFractionDigits:0, useGrouping:'always'});
 const fmtEur0 = new Intl.NumberFormat('it-IT', {style:'currency', currency:'EUR', maximumFractionDigits:0});
 const fmtEur2 = new Intl.NumberFormat('it-IT', {style:'currency', currency:'EUR', maximumFractionDigits:2});
 function fmt(val, kind){
