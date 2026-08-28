@@ -349,6 +349,42 @@
   .rp-mini h4{margin:0 0 2px; font-size:.82rem; color:#334155}
   .rp-mini .sotto{font-size:.72rem; color:var(--muted); margin-bottom:4px}
 
+
+  /* =====================================================================
+     STIMA: tutto cio' che non e' un dato ENEA
+     Il bordo tratteggiato e' la convenzione visiva del "valore ricavato,
+     non misurato". Serve perche' una tabella stampata circola da sola,
+     staccata dalla nota metodologica, e chi la legge deve capire in un
+     colpo d'occhio che quei numeri non sono pubblicati da ENEA.
+     ===================================================================== */
+  .st-badge{display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:.6px;
+    padding:3px 8px; border-radius:4px; color:#7c4a03; background:#fdf3e3;
+    border:1px dashed #d9a441; white-space:nowrap}
+  .st-card{border:1px dashed #d9a441}
+  table.st-tab td.st-val{font-variant-numeric:tabular-nums; color:#7c4a03; white-space:nowrap}
+  table.st-tab .st-sub{font-weight:400; font-size:.66rem; letter-spacing:.2px; opacity:.75}
+  table.st-tab tr.st-sel td{background:#fdf3e3; font-weight:700}
+  table.st-tab tr.st-tot td{border-top:2px solid #d9a441; font-weight:700; background:#fbfbfc}
+  .st-tag{display:inline-block; font-size:.68rem; padding:1px 7px; border-radius:9px;
+    border:1px solid currentColor; white-space:nowrap}
+  .st-tag.st-ok{color:#0f7a52}
+  .st-tag.st-med{color:#9a6206}
+  .st-tag.st-largo{color:#b0341f}
+  /* Nella scheda Province le colonne stimate vanno distinte da quelle reali,
+     che nella stessa riga stanno a fianco. */
+  table.freq td.st-col{color:#7c4a03; background:#fdf9f1; white-space:nowrap}
+
+  @media print{
+    /* Su carta i tre mini-grafici annuali stanno in fila: a due colonne
+       resta mezza riga vuota e le note di lettura scivolano su una pagina
+       in piu', quasi tutta bianca. */
+    .rp-griglia{grid-template-columns:repeat(3,1fr); gap:10px}
+    .st-badge{font-size:7pt; border-style:dashed}
+    table.st-tab{font-size:8pt}
+    table.st-tab .st-sub{font-size:6.5pt}
+    .st-tag{font-size:7pt}
+  }
+
   @media print{
     /* Questo blocco arriva dopo quello del rapporto, quindi qui vanno
        ripetute le misure compatte: altrimenti il padding piu generoso
@@ -936,6 +972,10 @@
         <select id="rp-regione"></select>
       </div>
       <div class="ctl">
+        <label for="rp-provincia">Provincia da stimare</label>
+        <select id="rp-provincia"></select>
+      </div>
+      <div class="ctl">
         <label for="rp-data">Superbonus — data di riferimento</label>
         <select id="rp-data"></select>
       </div>
@@ -992,6 +1032,19 @@
         Le barre sono tutte lunghe uguale perché mostrano le proporzioni, non gli importi: servono
         a confrontare la regione con aree di taglia molto diversa.</div>
       <div id="rp-composizione" style="min-height:230px"></div>
+    </div>
+
+    <div class="card rp-blocco st-card">
+      <h3>Stima provinciale del Superbonus
+        <span class="st-badge">STIMA — elaborazione ANCE Piemonte</span></h3>
+      <div class="hint">ENEA non pubblica il Superbonus per provincia: il dato non esiste.
+        Il totale regionale è qui ripartito fra le province con due chiavi indipendenti,
+        entrambe prese dalla tabella provinciale del Rapporto ENEA 2023 — gli investimenti
+        Ecobonus 2022 e gli abitanti. Ogni cifra è l'intervallo fra le due chiavi:
+        dove concordano la stima è stretta, dove divergono è ampia e va usata con cautela.
+        <strong>Non sono dati ENEA e non vanno citati come tali.</strong></div>
+      <div class="rp-analisi" id="rp-stima-testo"></div>
+      <div id="rp-stima"></div>
     </div>
 
     <div class="card rp-blocco">
@@ -2100,7 +2153,11 @@ function renderProvince(){
     const scope = (region === '__ALL__')
       ? (topN > 0 ? `Top ${topN} province italiane su ${fullCount}` : `Tutte le ${fullCount} province italiane`)
       : (topN > 0 ? `Top ${Math.min(topN, fullCount)} province di ${region}` : `Province di ${region} (${fullCount})`);
-    hint.innerHTML = `Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto annuale detrazioni fiscali, edizione 2023</a>, pubblicato il 14 dic 2023, Appendice B. Dati <strong>Ecobonus, anno 2022</strong>. Metrica: ${label}. ${scope}. Il dettaglio provinciale non è pubblicato dall'ENEA per le annualità successive.`;
+    hint.innerHTML = `Fonte: <a href="https://www.efficienzaenergetica.enea.it/pubblicazioni/rapporto-annuale-detrazioni-fiscali.html" target="_blank" rel="noopener">ENEA — Rapporto annuale detrazioni fiscali, edizione 2023</a>, pubblicato il 14 dic 2023, Appendice B. Dati <strong>Ecobonus, anno 2022</strong>. Metrica: ${label}. ${scope}. Il dettaglio provinciale non è pubblicato dall'ENEA per le annualità successive. `
+      + `<br><span class="st-badge">STIMA — elaborazione ANCE Piemonte</span> Le ultime due colonne `
+      + `non sono dati ENEA: sono il Superbonus regionale al ${fmtItDate(DATES[DATES.length - 1])} `
+      + `ripartito fra le province con due chiavi (investimenti Ecobonus 2022 e abitanti), `
+      + `e mostrano l'intervallo fra le due.`;
   }
 
   // Chart — barre orizzontali
@@ -2151,15 +2208,29 @@ function renderProvince(){
   if(container){
     if(!sel.length){ container.innerHTML = '<div class="hint">Nessuna provincia per la selezione corrente.</div>'; }
     else {
+      const isoUlt = DATES[DATES.length - 1];
+      const cache = {};
+      const stimaDi = (regione, provincia) => {
+        if(!(regione in cache)) cache[regione] = stimaProvince(regione, isoUlt);
+        const s = cache[regione];
+        if(!s) return null;
+        const r = s.righe.find(x => x.provincia === provincia);
+        return r ? {r, s} : null;
+      };
       let html = '<table class="freq"><tr><td>#</td><td>Provincia</td><td>Regione</td>'
                + '<td class="r">Investimenti (M€)</td><td class="r">Risparmio (GWh/anno)</td>'
-               + '<td class="r">Abitanti</td><td class="r">€/ab</td></tr>';
+               + '<td class="r">Abitanti</td><td class="r">€/ab</td>'
+               + '<td class="r">Superbonus stimato — edifici</td>'
+               + '<td class="r">Superbonus stimato — inv. ammessi</td></tr>';
       sel.forEach((r, i) => {
+        const st = stimaDi(r.regione, r.provincia);
         html += `<tr><td>${i+1}</td><td>${r.provincia}</td><td>${r.regione}</td>`
               + `<td class="r">${fmtNum(r.investimenti_MEUR, 1)}</td>`
               + `<td class="r">${fmtNum(r.risparmio_GWh_anno, 1)}</td>`
               + `<td class="r">${fmtNum(r.abitanti, 0)}</td>`
-              + `<td class="r">${fmtNum(r.investimento_per_abitante_EUR, 0)}</td></tr>`;
+              + `<td class="r">${fmtNum(r.investimento_per_abitante_EUR, 0)}</td>`
+              + `<td class="r st-col">${st ? stimaInteri(st.r.edLo, st.r.edHi) : '—'}</td>`
+              + `<td class="r st-col">${st ? stimaEuro(st.r.invLo, st.r.invHi) : '—'}</td></tr>`;
       });
       html += '</table>';
       container.innerHTML = html;
@@ -3659,6 +3730,183 @@ function rpGrafico(regione){
   box.innerHTML = svg;
 }
 
+// =====================================================================
+// ============== STIMA PROVINCIALE DEL SUPERBONUS =====================
+// =====================================================================
+// ENEA non ha mai pubblicato il Superbonus per provincia: l'unico dato
+// provinciale esistente e' l'Ecobonus 2022 (edizione 2023 del Rapporto).
+// Qui il totale regionale del Superbonus viene ripartito fra le province
+// con DUE chiavi indipendenti, prese entrambe da quella stessa tabella:
+//   1. gli investimenti Ecobonus 2022 della provincia
+//   2. gli abitanti della provincia
+// Il risultato non e' un numero ma l'intervallo fra le due chiavi. Dove
+// concordano la stima e' stretta e regge; dove divergono e' larga, e si
+// vede a occhio che quel numero vale poco. Un valore unico avrebbe
+// nascosto proprio l'informazione piu' importante.
+//
+// Cosa NON e' stato fatto, e perche': avevo ipotizzato una correzione
+// legata alla quota condominiale del Superbonus (68,9% in Piemonte contro
+// un Ecobonus molto piu' unifamiliare). Misurata sulle venti regioni, la
+// correlazione fra quota condominiale ed errore della chiave e' -0,15,
+// cioe' nulla: la correzione sarebbe stata inventata e non e' stata messa.
+
+const STIMA_ETICHETTA = 'STIMA — elaborazione ANCE Piemonte';
+
+/** Ripartizione delle province di una regione secondo le due chiavi. */
+function stimaProvince(regione, iso){
+  const righe = PROVINCE.rows.filter(r => r.regione === regione
+      && r.investimenti_MEUR != null && r.abitanti);
+  if(!righe.length) return null;
+  const d = (ENEA_DATA.data[iso] || {})[regione];
+  if(!d) return null;
+  const tE = righe.reduce((s, r) => s + r.investimenti_MEUR, 0);
+  const tP = righe.reduce((s, r) => s + r.abitanti, 0);
+  if(!tE || !tP) return null;
+  const it = (ENEA_DATA.data[iso] || {})['Italia'] || null;
+
+  const out = righe.map(r => {
+    const qE = r.investimenti_MEUR / tE * 100;
+    const qP = r.abitanti / tP * 100;
+    const lo = Math.min(qE, qP), hi = Math.max(qE, qP);
+    const media = (lo + hi) / 2;
+    return {
+      provincia: r.provincia, eco: r.investimenti_MEUR, abitanti: r.abitanti,
+      qE, qP, lo, hi, divario: media ? (hi - lo) / media * 100 : 0,
+      edLo: d.n_edifici_totale * lo / 100, edHi: d.n_edifici_totale * hi / 100,
+      invLo: d.investimenti_ammessi_totale * lo / 100,
+      invHi: d.investimenti_ammessi_totale * hi / 100,
+      // peso sul totale nazionale: quota nella regione per quota della
+      // regione sull'Italia, cioe' la stessa stima letta su scala italiana
+      itLo: it ? d.investimenti_ammessi_totale * lo / 100 / it.investimenti_ammessi_totale * 100 : null,
+      itHi: it ? d.investimenti_ammessi_totale * hi / 100 / it.investimenti_ammessi_totale * 100 : null,
+    };
+  }).sort((a, b) => b.qE - a.qE);
+
+  return {righe: out, regione, iso, ecoTot: tE,
+          unica: righe.length === 1,
+          sbEdifici: d.n_edifici_totale,
+          sbInv: d.investimenti_ammessi_totale,
+          quotaRegItalia: it ? d.investimenti_ammessi_totale / it.investimenti_ammessi_totale * 100 : null};
+}
+
+/** Quanto e' largo l'intervallo, detto a parole invece che in percentuale. */
+function stimaTenuta(divario, unica){
+  if(unica) return {testo: 'coincide con la regione', classe: 'st-ok'};
+  if(divario < 8)  return {testo: 'stretta',  classe: 'st-ok'};
+  if(divario < 20) return {testo: 'media',    classe: 'st-med'};
+  return {testo: 'ampia', classe: 'st-largo'};
+}
+
+/** Percentuale con una cifra, senza il segno di percento ripetuto. */
+function stimaPerc(lo, hi, dec){
+  const d = dec === undefined ? 1 : dec;
+  const a = lo.toLocaleString('it-IT', {minimumFractionDigits: d, maximumFractionDigits: d});
+  const b = hi.toLocaleString('it-IT', {minimumFractionDigits: d, maximumFractionDigits: d});
+  return a === b ? `${a}%` : `${a}–${b}%`;
+}
+
+/** Intervallo in euro con UNA sola unita' di misura per entrambi gli
+    estremi: fmt() sceglierebbe "mln" per 0,98 e "mld" per 1,02, e
+    l'intervallo diventerebbe illeggibile. */
+function stimaEuro(lo, hi){
+  const scala = Math.abs(hi) >= 1e9 ? [1e9, 'mld €', 2]
+              : Math.abs(hi) >= 1e6 ? [1e6, 'mln €', 1]
+              : [1, '€', 0];
+  const n = v => (v / scala[0]).toLocaleString('it-IT',
+                  {minimumFractionDigits: scala[2], maximumFractionDigits: scala[2]});
+  const a = n(lo), b = n(hi);
+  return (a === b ? a : `${a}–${b}`) + ' ' + scala[1];
+}
+
+function stimaInteri(lo, hi){
+  const a = fmtInt.format(Math.round(lo)), b = fmtInt.format(Math.round(hi));
+  return a === b ? a : `${a}–${b}`;
+}
+
+/** "del Piemonte", "della Lombardia", "dell'Abruzzo", "delle Marche".
+    RP_ARTICOLI porta l'articolo semplice; qui serve la preposizione
+    articolata, e comporla a mano regione per regione sarebbe una seconda
+    tabella da tenere allineata alla prima. */
+function stimaDelLa(regione){
+  const a = RP_ARTICOLI[regione] || '';
+  const prep = {'il ': 'del ', 'lo ': 'dello ', 'la ': 'della ',
+                "l'": "dell'", 'le ': 'delle ', 'i ': 'dei ', 'gli ': 'degli '}[a];
+  return (prep || 'di ') + regione;
+}
+
+/** Il paragrafo sulla provincia scelta: provincia, regione, Italia. */
+function stimaTesto(s, provincia){
+  const p = s.righe.find(r => r.provincia === provincia) || s.righe[0];
+  const t = stimaTenuta(p.divario, s.unica);
+  let out = `<p>Sul Superbonus <strong>${p.provincia}</strong> vale una quota stimata `
+    + `<strong>${stimaPerc(p.lo, p.hi)}</strong> ${stimaDelLa(s.regione)}`
+    + (p.itLo !== null ? ` e <strong>${stimaPerc(p.itLo, p.itHi, 2)}</strong> del totale nazionale` : '')
+    + `, cioè ${stimaInteri(p.edLo, p.edHi)} edifici e ${stimaEuro(p.invLo, p.invHi)} `
+    + `di investimenti ammessi a detrazione. `;
+  if(s.unica){
+    out += `${rpConArt(s.regione, true)} `
+         + `ha una sola provincia, quindi qui la ripartizione non è una stima: `
+         + `il dato provinciale coincide con quello regionale.</p>`;
+    return out;
+  }
+  // Sotto l'uno per cento la percentuale arrotondata direbbe "0%", che di
+  // un intervallo largo tre decimi di punto e' una descrizione falsa.
+  out += `L'ampiezza dell'intervallo è ${p.divario < 1 ? 'inferiore all\'1%'
+            : p.divario.toLocaleString('it-IT', {maximumFractionDigits: 0}) + '%'} `
+       + `del valore centrale: stima <strong>${t.testo}</strong>.</p>`;
+  const primo = s.righe[0], ultimo = s.righe[s.righe.length - 1];
+  out += `<p>Nel resto della regione la ripartizione va da ${primo.provincia} `
+       + `(${stimaPerc(primo.lo, primo.hi)}) a ${ultimo.provincia} `
+       + `(${stimaPerc(ultimo.lo, ultimo.hi)}). Il dato di partenza, quello vero, `
+       + `è l'Ecobonus 2022: la regione ha investito `
+       + `${s.ecoTot.toLocaleString('it-IT', {minimumFractionDigits: 1, maximumFractionDigits: 1})} M€, `
+       + `di cui ${primo.eco.toLocaleString('it-IT', {minimumFractionDigits: 1, maximumFractionDigits: 1})} M€ `
+       + `nella sola provincia di ${primo.provincia}.</p>`;
+  return out;
+}
+
+function stimaTabella(s, provincia){
+  let h = '<table class="cmp rp-tab st-tab"><thead><tr>'
+        + '<th class="rp-reg">Provincia</th>'
+        + '<th class="r">Ecobonus 2022<br><span class="st-sub">M€ · dato ENEA</span></th>'
+        + '<th class="r">Quota regione<br><span class="st-sub">stima</span></th>'
+        + '<th class="r">Edifici<br><span class="st-sub">stima</span></th>'
+        + '<th class="r">Investimenti ammessi<br><span class="st-sub">stima</span></th>'
+        + '<th class="r">Ampiezza</th></tr></thead><tbody>';
+  s.righe.forEach(r => {
+    const t = stimaTenuta(r.divario, s.unica);
+    const sel = r.provincia === provincia ? ' class="st-sel"' : '';
+    h += `<tr${sel}><td class="rp-reg">${r.provincia}</td>`
+       + `<td class="r">${r.eco.toLocaleString('it-IT', {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>`
+       + `<td class="r st-val">${stimaPerc(r.lo, r.hi)}</td>`
+       + `<td class="r st-val">${stimaInteri(r.edLo, r.edHi)}</td>`
+       + `<td class="r st-val">${stimaEuro(r.invLo, r.invHi)}</td>`
+       + `<td class="r"><span class="st-tag ${t.classe}">${t.testo}</span></td></tr>`;
+  });
+  h += `<tr class="st-tot"><td class="rp-reg">${s.regione} — totale</td>`
+     + `<td class="r">${s.ecoTot.toLocaleString('it-IT', {minimumFractionDigits: 1, maximumFractionDigits: 1})}</td>`
+     + `<td class="r">100%</td>`
+     + `<td class="r">${fmtInt.format(s.sbEdifici)}</td>`
+     + `<td class="r">${fmt(s.sbInv, 'eur')}</td>`
+     + `<td class="r">dato ENEA</td></tr>`;
+  return h + '</tbody></table>';
+}
+
+function rpStima(regione, provincia, iso){
+  const box = document.getElementById('rp-stima');
+  const testo = document.getElementById('rp-stima-testo');
+  if(!box || !testo) return;
+  const s = stimaProvince(regione, iso);
+  if(!s){
+    testo.innerHTML = '';
+    box.innerHTML = '<p class="ts-note">Per questa regione non ci sono dati provinciali '
+                  + 'nell\'Appendice del Rapporto ENEA 2023: la stima non è calcolabile.</p>';
+    return;
+  }
+  testo.innerHTML = stimaTesto(s, provincia);
+  box.innerHTML = stimaTabella(s, provincia);
+}
+
 // ----------------------------------------------------------------- render
 
 function renderRapporto(){
@@ -3702,6 +3950,7 @@ function renderRapporto(){
     'Le aree seguono la ripartizione ISTAT: Nord comprende Piemonte, Valle d\'Aosta, Lombardia, Trentino-Alto Adige, Veneto, Friuli-Venezia Giulia, Liguria ed Emilia-Romagna; Centro Toscana, Umbria, Marche e Lazio; Sud e Isole le restanti otto.',
     'La colonna «% su Italia» misura il peso della regione sul totale nazionale, quella «Posizione» il suo rango fra le venti regioni per quel parametro.',
     'Alcuni parametri del Superbonus esistono solo dai report più recenti: dove ENEA non li pubblicava la riga non compare.',
+    'La stima provinciale non è un dato ENEA. Nasce dal totale regionale ripartito con due chiavi — investimenti Ecobonus 2022 e abitanti — e per questo è espressa come intervallo. Misurata dove il confronto è possibile, cioè sulla ripartizione provinciale dell\'Ecobonus, una chiave di questo tipo sbaglia in mediana del 12%, e l\'errore cresce al calare della dimensione della provincia.',
   ];
   if(anno <= 2022){
     note.push('Per l\'Ecobonus il 2022 usa la vecchia classificazione ENEA per tecnologia: i totali regionali restano confrontabili con gli altri anni, il dettaglio per tipo d\'intervento no.');
@@ -3710,6 +3959,7 @@ function renderRapporto(){
 
   rpGrafico(regione);
   rpComposizione(regione, iso);
+  rpStima(regione, (document.getElementById('rp-provincia') || {}).value, iso);
   rpMiniAnnuali(regione);
 }
 
@@ -3735,6 +3985,27 @@ function renderRapporto(){
   riempi(selD, DATES.slice().reverse(), fmtItDate, DATES[DATES.length - 1]);
   const anni = Array.from(new Set(ANNUAL.Ecobonus.map(r => Number(r.anno)))).sort((a, b) => b - a);
   if(anni.length) riempi(selA, anni, a => a, anni[0]);
+
+  const selP = document.getElementById('rp-provincia');
+  const riempiProvince = () => {
+    if(!selP) return;
+    const prec = selP.value;
+    const righe = PROVINCE.rows
+      .filter(r => r.regione === selR.value && r.investimenti_MEUR != null)
+      .sort((a, b) => b.investimenti_MEUR - a.investimenti_MEUR);
+    selP.innerHTML = '';
+    righe.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r.provincia;
+      o.textContent = r.provincia;
+      selP.appendChild(o);
+    });
+    if(righe.some(r => r.provincia === prec)) selP.value = prec;
+    selP.disabled = !righe.length;
+  };
+  riempiProvince();
+  if(selP) selP.addEventListener('change', renderRapporto);
+  selR.addEventListener('change', riempiProvince);
 
   [selR, selD, selA].forEach(s => s.addEventListener('change', renderRapporto));
   const btn = document.getElementById('rp-stampa');
