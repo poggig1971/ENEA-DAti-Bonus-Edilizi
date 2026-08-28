@@ -760,6 +760,10 @@ function parseItNumber(v){
   if(v === null || v === undefined || v === '') return NaN;
   if(typeof v === 'number') return v;
   const s = String(v).trim();
+  // Gruppi di migliaia all'inglese senza decimali ("4,588", "1,234,567"):
+  // la virgola qui non puo essere un separatore decimale, perche lascerebbe
+  // sempre esattamente tre cifre. Senza questo caso "4,588" varrebbe 4,588.
+  if(/^-?\d{1,3}(,\d{3})+$/.test(s)) return Number(s.replace(/,/g, ''));
   const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
   // Se virgola viene DOPO il punto → formato italiano (punti=migliaia, virgola=decimale)
   // Altrimenti → formato inglese (virgole=migliaia, punto=decimale) o senza separatori
@@ -836,6 +840,17 @@ function fmtItDate(iso){
   const mesi = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
   return `${parseInt(d)} ${mesi[parseInt(m)-1]} ${y}`;
 }
+
+// Riferimento calcolato sui dati incorporati (verificati sui PDF ENEA): serve a
+// riconoscere un foglio esterno letto con la scala sbagliata.
+const RIFERIMENTO_SUP = (function(){
+  const dd = Object.keys(ENEA_DATA.data).sort();
+  for(let i = dd.length - 1; i >= 0; i--){
+    const it = ENEA_DATA.data[dd[i]] && ENEA_DATA.data[dd[i]]['Italia'];
+    if(it && it.n_edifici_totale) return {data: dd[i], edifici: it.n_edifici_totale};
+  }
+  return null;
+})();
 
 // ============ STATO ============
 const DATES = Object.keys(ENEA_DATA.data).sort();
@@ -1983,7 +1998,7 @@ async function gsheetTabAs2D(sheetId, tabName){
   }
   const wb = XLSX.read(txt, {type:'string', cellDates:true});
   const sh = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sh, {header:1, defval:null, raw:false});
+  return XLSX.utils.sheet_to_json(sh, {header:1, defval:null, raw:true});
 }
 
 // Processa righe Superbonus (header: data | area | ...metriche)
@@ -2017,6 +2032,16 @@ function applySuperbonus2D(rows){
   }
   if(!Object.keys(newData).length) throw new Error('Foglio "Dati": nessuna riga valida.');
   const nDateFoglio = Object.keys(newData).length;
+  if(RIFERIMENTO_SUP && newData[RIFERIMENTO_SUP.data] && newData[RIFERIMENTO_SUP.data]['Italia']){
+    const v = newData[RIFERIMENTO_SUP.data]['Italia'].n_edifici_totale;
+    const r = v ? v / RIFERIMENTO_SUP.edifici : 1;
+    if(r > 1.5 || r < 0.67){
+      throw new Error('i valori letti dal foglio non hanno lo stesso ordine di grandezza di quelli '
+        + 'incorporati (al ' + RIFERIMENTO_SUP.data + ' il foglio riporta ' + fmt(v, 'int')
+        + ' edifici in Italia invece di ' + fmt(RIFERIMENTO_SUP.edifici, 'int')
+        + '). Caricamento annullato: probabile problema di formato numerico nel foglio.');
+    }
+  }
   if(AUTOLOAD_INIZIALE && nDateFoglio < DATES.length){
     throw new Error('il foglio contiene ' + nDateFoglio + ' rilevazioni mensili, meno delle '
       + DATES.length + ' gia presenti nella dashboard. Sono stati mantenuti i dati incorporati, '
@@ -2092,7 +2117,8 @@ async function fetchPublishedWorkbook(url){
 
 // Estrae le righe 2D di un foglio (helper)
 function sheetTo2D(sh){
-  return XLSX.utils.sheet_to_json(sh, {header:1, defval:null, raw:false});
+  // raw:true -> numeri come numeri, senza passare dalla formattazione del foglio
+  return XLSX.utils.sheet_to_json(sh, {header:1, defval:null, raw:true});
 }
 
 // Carica Superbonus da URL: supporta /pub (xlsx) e /spreadsheets/d/{id}/edit (gviz)
@@ -2516,7 +2542,9 @@ function renderAndamento(){
   const hint = document.getElementById('ts-hint');
   if(hint){
     let txt = 'Fonte: <a href="https://www.efficienzaenergetica.enea.it/detrazioni-fiscali/superbonus/risultati-superbonus.html" target="_blank" rel="noopener">ENEA — Report mensili Superbonus</a>. '
-            + "Valori cumulati dall'avvio della misura, non flussi mensili.";
+            + "Valori cumulati dall'avvio della misura, non flussi mensili: possono anche "
+            + "diminuire, perche ENEA rivede i dati quando delle asseverazioni vengono ritirate "
+            + "o riclassificate.";
     if(conDato.length && conDato.length < date.length){
       txt += ' <strong>Attenzione:</strong> ENEA ha iniziato a pubblicare questo parametro dal '
            + fmtItDate(conDato[0]) + ', quindi le linee partono da quel mese ('
