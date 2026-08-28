@@ -217,6 +217,41 @@
   .fonti .upload-status{margin-top:5px; font-size:.7rem; color:rgba(255,255,255,.75);
     text-align:right}
   .fonti .upload-status:empty{display:none}
+  /* ===== Rapporto regionale ===== */
+  .rp-print{background:var(--brand); color:#fff; border:none; border-radius:5px;
+    padding:8px 14px; font-size:.82rem; font-weight:600; cursor:pointer; width:100%}
+  .rp-print:hover{background:var(--brand2)}
+  .rp-testata{border-bottom:3px solid var(--brand); padding-bottom:10px; margin-bottom:16px}
+  .rp-testata h1{margin:0; font-size:1.45rem; color:var(--brand); letter-spacing:.2px}
+  .rp-sotto{font-size:.85rem; color:var(--muted); margin-top:5px}
+  .rp-blocco{margin-bottom:16px}
+  .rp-badge{background:#eef4fb; color:var(--brand); border-radius:4px; padding:1px 8px;
+    font-size:.72rem; font-weight:700; margin-left:6px; vertical-align:middle}
+  .rp-sintesi-lista{margin:4px 0 0; padding-left:1.1rem}
+  .rp-sintesi-lista li{font-size:.9rem; line-height:1.7; color:#334155}
+  table.rp-tab{font-size:.8rem}
+  table.rp-tab td.rp-par{text-align:left; max-width:280px}
+  table.rp-tab th.rp-reg, table.rp-tab td.rp-reg{background:#eef4fb; font-weight:700; color:var(--brand)}
+  .rp-note li{font-size:.78rem; color:#475569; line-height:1.6; margin-bottom:4px}
+
+  /* ===== Stampa: resta solo il rapporto ===== */
+  @media print{
+    @page{size:A4; margin:14mm 12mm}
+    html,body{height:auto; overflow:visible; background:#fff}
+    header, .tabs, .filtri, .help-overlay, footer, #tooltip{display:none !important}
+    main{display:block; overflow:visible}
+    main > section{display:none !important}
+    main > section#tab-rapporto{display:block !important}
+    #tab-rapporto .contenuto{overflow:visible; padding:0; display:block}
+    .card{box-shadow:none; border:1px solid #d5dae2; break-inside:avoid; page-break-inside:avoid}
+    .rp-blocco{break-inside:avoid}
+    table.rp-tab{font-size:9pt}
+    table.cmp th{background:#eef2f7 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+    table.rp-tab th.rp-reg, table.rp-tab td.rp-reg{background:#eef4fb !important;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact}
+    .chart-wrap{height:230px !important}
+    a{color:inherit; text-decoration:none}
+  }
 </style>
 </head>
 <body>
@@ -265,6 +300,7 @@
   <div class="tab"        data-tab="bonuscasa"     role="tab" tabindex="0">Bonus Casa</div>
   <div class="tab"        data-tab="bonusfacciate" role="tab" tabindex="0">Bonus Facciate</div>
   <div class="tab"        data-tab="province"      role="tab" tabindex="0">Province</div>
+  <div class="tab"        data-tab="rapporto"      role="tab" tabindex="0">Rapporto</div>
 </nav>
 
 <!-- Modale istruzioni d'uso -->
@@ -291,6 +327,8 @@
       <li>Usa le <strong>linguette in alto</strong> per spostarti fra Superbonus, Serie storica, Ecobonus, Bonus Casa, Bonus Facciate e Province.</li>
       <li>La scheda <strong>Serie storica</strong> mostra l'andamento mensile del Superbonus: scegli il parametro, l'intervallo di mesi e fino a sei regioni da sovrapporre, con la linea nazionale come riferimento.</li>
       <li>Nella scheda <strong>Province</strong> il riquadro in cima mette a confronto una provincia con un'altra, con la propria regione o con la media delle 107 province italiane.</li>
+      <li>La scheda <strong>Rapporto</strong> compone un documento su una singola regione: tutti i parametri del Superbonus e le metriche di Ecobonus, Bonus Casa e Bonus Facciate, ciascuno affiancato ai totali di Nord, Centro, Sud e Italia, con il peso della regione e la sua posizione fra le venti. Il pulsante «Stampa o salva in PDF» produce il documento impaginato, senza menu né filtri.</li>
+      <li>All'apertura la dashboard propone il <strong>Piemonte</strong> come regione di riferimento nella serie storica e nel rapporto. Per cambiarla stabilmente si modifica la costante <code>REGIONE_PREDEFINITA</code> in cima allo script.</li>
       <li>I <strong>filtri</strong> stanno nella colonna fissa a sinistra e restano sempre visibili; i risultati — riassunto dei numeri, istogramma, mappa e tabelle — scorrono nella parte destra.</li>
       <li>Passa il mouse sulle regioni della mappa per vedere il valore di ciascuna.</li>
       <li>Nella scheda Superbonus i <strong>chip</strong> servono a includere o escludere le regioni dal confronto.</li>
@@ -738,6 +776,85 @@
   </div>
 </section>
 
+<section id="tab-rapporto" class="viz" style="display:none">
+
+  <aside class="filtri">
+    <div class="filtri-tit">Rapporto</div>
+    <div class="toolbar">
+      <div class="ctl">
+        <label for="rp-regione">Regione oggetto del rapporto</label>
+        <select id="rp-regione"></select>
+      </div>
+      <div class="ctl">
+        <label for="rp-data">Superbonus — data di riferimento</label>
+        <select id="rp-data"></select>
+      </div>
+      <div class="ctl">
+        <label for="rp-anno">Bonus annuali — annualità</label>
+        <select id="rp-anno"></select>
+      </div>
+    </div>
+    <div class="ts-actions" style="margin-top:4px">
+      <button type="button" id="rp-stampa" class="rp-print">Stampa o salva in PDF</button>
+    </div>
+    <div class="ts-note">
+      Il pulsante apre la stampa del browser: scegliendo «Salva come PDF» si ottiene
+      il rapporto impaginato, senza menu né filtri.
+    </div>
+  </aside>
+
+  <div class="contenuto" id="rp-foglio">
+
+    <div class="rp-testata">
+      <h1 id="rp-titolo">Rapporto regionale</h1>
+      <div class="rp-sotto" id="rp-sottotitolo"></div>
+    </div>
+
+    <div class="card rp-blocco">
+      <h3>In sintesi</h3>
+      <div id="rp-sintesi"></div>
+    </div>
+
+    <div class="card rp-blocco">
+      <h3>Superbonus — tutti i parametri <span class="rp-badge" id="rp-badge-sb"></span></h3>
+      <div class="hint" id="rp-fonte-sb"></div>
+      <div id="rp-tab-sb"></div>
+    </div>
+
+    <div class="card rp-blocco">
+      <h3>Superbonus — peso della regione sul totale nazionale</h3>
+      <div class="hint">Quota della regione sul dato italiano, mese per mese. Entrambe le linee
+        sono percentuali, quindi condividono la stessa scala: dice se il peso della regione è
+        cresciuto o calato, cosa che i valori assoluti, sempre crescenti, non mostrano.</div>
+      <div id="rp-grafico" style="height:300px"></div>
+    </div>
+
+    <div class="card rp-blocco">
+      <h3>Ecobonus <span class="rp-badge" id="rp-badge-eco"></span></h3>
+      <div class="hint" id="rp-fonte-eco"></div>
+      <div id="rp-tab-eco"></div>
+    </div>
+
+    <div class="card rp-blocco">
+      <h3>Bonus Casa <span class="rp-badge" id="rp-badge-bc"></span></h3>
+      <div class="hint" id="rp-fonte-bc"></div>
+      <div id="rp-tab-bc"></div>
+    </div>
+
+    <div class="card rp-blocco">
+      <h3>Bonus Facciate <span class="rp-badge" id="rp-badge-bf"></span></h3>
+      <div class="hint" id="rp-fonte-bf"></div>
+      <div id="rp-tab-bf"></div>
+    </div>
+
+    <div class="card rp-blocco rp-note">
+      <h3>Note di lettura</h3>
+      <ul id="rp-note-lista"></ul>
+    </div>
+
+  </div>
+</section>
+
 </main>
 
 <footer>
@@ -786,6 +903,11 @@ const NORD = ["Valle d'Aosta","Piemonte","Lombardia","Trentino-Alto Adige","Vene
 const CENTRO = ["Toscana","Umbria","Marche","Lazio"];
 const SUD = ["Abruzzo","Molise","Campania","Puglia","Basilicata","Calabria","Sicilia","Sardegna"];
 const AREA_GROUPS = {Nord:NORD, Centro:CENTRO, "Sud+Isole":SUD};
+
+// Regione di casa: e quella che la serie storica e il rapporto propongono
+// all'apertura. Cambiare questa riga sposta il punto di vista di tutta la
+// dashboard senza toccare altro.
+const REGIONE_PREDEFINITA = 'Piemonte';
 
 const PARAMETERS = [
   {key:"n_edifici_totale",       label:"N. di edifici (totale)",                    fmt:"int"},
@@ -1406,7 +1528,7 @@ if(_inpSup) _inpSup.addEventListener('change', (e)=>{
 // =====================================================================
 
 // Tab switching
-const TAB_IDS = ['superbonus','andamento','ecobonus','bonuscasa','bonusfacciate','province'];
+const TAB_IDS = ['superbonus','andamento','ecobonus','bonuscasa','bonusfacciate','province','rapporto'];
 document.querySelectorAll('.tabs .tab').forEach(t => {
   t.addEventListener('click', () => {
     const tabName = t.getAttribute('data-tab');
@@ -1423,6 +1545,7 @@ document.querySelectorAll('.tabs .tab').forEach(t => {
     if(tabName === 'bonuscasa') renderBonusCasa();
     if(tabName === 'bonusfacciate') renderBonusFacciate();
     if(tabName === 'province'){ renderProvince(); renderConfrontoProvince(); }
+    if(tabName === 'rapporto') renderRapporto();
   });
 });
 
@@ -2784,7 +2907,10 @@ function renderAndamentoTabella(date, key, param){
     });
   });
 
-  tsImpostaSelezione(tsTopRegioni(PARAMETERS[0].key, 3));
+  // si parte dalla regione di casa, con la linea Italia gia attiva come
+  // termine di paragone; le altre regioni si aggiungono con un clic
+  tsImpostaSelezione(REGIONS.includes(REGIONE_PREDEFINITA)
+                     ? [REGIONE_PREDEFINITA] : tsTopRegioni(PARAMETERS[0].key, 1));
   renderAndamentoChips();
 })();
 
@@ -3031,6 +3157,393 @@ function renderConfrontoProvince(){
   if(el) el.addEventListener('change', renderConfrontoProvince);
 });
 
+// =====================================================================
+// ============ RAPPORTO REGIONALE (scheda stampabile) =================
+// =====================================================================
+
+
+
+const RP_MACRO = [
+  {chiave: 'Nord',   regioni: NORD},
+  {chiave: 'Centro', regioni: CENTRO},
+  {chiave: 'Sud',    regioni: SUD},
+];
+
+/** Somma di un campo Superbonus su un elenco di regioni, a una certa data. */
+function rpSommaSup(iso, regioni, campo){
+  const g = ENEA_DATA.data[iso];
+  if(!g) return null;
+  let somma = null;
+  for(const r of regioni){
+    const v = g[r] && g[r][campo];
+    if(v === undefined || v === null || isNaN(v)) continue;
+    somma = (somma === null ? 0 : somma) + v;
+  }
+  return somma;
+}
+
+/** Valore nazionale: la riga "Italia" se c'e, altrimenti la somma delle regioni. */
+function rpItaliaSup(iso, campo){
+  const g = ENEA_DATA.data[iso];
+  const v = g && g['Italia'] && g['Italia'][campo];
+  if(v !== undefined && v !== null && !isNaN(v)) return v;
+  return rpSommaSup(iso, REGIONS, campo);
+}
+
+/** Posizione della regione fra le 20, per un campo (1 = valore piu alto). */
+function rpPosizione(iso, regione, campo){
+  const vals = REGIONS
+    .map(r => ({r, v: rpSommaSup(iso, [r], campo)}))
+    .filter(x => x.v !== null)
+    .sort((a, b) => b.v - a.v);
+  const i = vals.findIndex(x => x.r === regione);
+  return i < 0 ? null : {posizione: i + 1, su: vals.length};
+}
+
+function rpMacroDi(regione){
+  const m = RP_MACRO.find(x => x.regioni.includes(regione));
+  return m ? m.chiave : null;
+}
+
+/** Percentuale con l'articolo giusto: l'8%, l'11%, ma il 7% e il 12%. */
+function rpPerc(v, articolo){
+  const s = v.toLocaleString('it-IT', {maximumFractionDigits: 1});
+  const vocale = /^(8|11)/.test(s);
+  const art = articolo === 'a' ? (vocale ? "all'" : 'al ')
+            : articolo === 'il' ? (vocale ? "l'" : 'il ')
+            : '';
+  return art + s + '%';
+}
+
+/** fmt() conosce interi ed euro; le grandezze fisiche vogliono i decimali. */
+function rpFmt(v, kind){
+  if(v === null || v === undefined || isNaN(v)) return '—';
+  return kind === 'dec' ? fmtNum(v, 1) : fmt(v, kind);
+}
+
+/** Riga di tabella: valore regione, tre macroaree, Italia, peso e posizione. */
+function rpRiga(etichetta, valori, kind, pos){
+  const {reg, nord, centro, sud, ita} = valori;
+  const perc = (reg !== null && ita) ? (reg / ita * 100) : null;
+  const cel = v => `<td>${rpFmt(v, kind)}</td>`;
+  return `<tr><td class="rp-par">${etichetta}</td>`
+       + `<td class="rp-reg">${rpFmt(reg, kind)}</td>`
+       + cel(nord) + cel(centro) + cel(sud) + cel(ita)
+       + `<td>${perc === null ? '—' : perc.toLocaleString('it-IT', {maximumFractionDigits: 1}) + '%'}</td>`
+       + `<td>${pos ? pos.posizione + '&deg; su ' + pos.su : '—'}</td></tr>`;
+}
+
+function rpIntestazione(regione){
+  return '<div style="overflow-x:auto"><table class="cmp rp-tab"><thead><tr>'
+       + '<th>Parametro</th>'
+       + `<th class="rp-reg">${regione}</th>`
+       + '<th>Nord</th><th>Centro</th><th>Sud e Isole</th><th>Italia</th>'
+       + `<th>% su Italia</th><th>Posizione</th></tr></thead><tbody>`;
+}
+
+// ------------------------------------------------------------ Superbonus
+
+function rpTabellaSuperbonus(regione, iso){
+  let html = rpIntestazione(regione);
+  let vuoti = 0;
+  for(const p of PARAMETERS){
+    const reg = rpSommaSup(iso, [regione], p.key);
+    if(reg === null && rpItaliaSup(iso, p.key) === null){ vuoti++; continue; }
+    html += rpRiga(p.label, {
+      reg,
+      nord:   rpSommaSup(iso, NORD, p.key),
+      centro: rpSommaSup(iso, CENTRO, p.key),
+      sud:    rpSommaSup(iso, SUD, p.key),
+      ita:    rpItaliaSup(iso, p.key),
+    }, p.fmt, rpPosizione(iso, regione, p.key));
+  }
+  html += '</tbody></table></div>';
+  if(vuoti) html += `<p class="ts-note">${vuoti} parametri non sono pubblicati da ENEA a questa data e non compaiono in tabella.</p>`;
+  return html;
+}
+
+// --------------------------------------------------------- bonus annuali
+
+/** Somma di una metrica annuale su un elenco di regioni. */
+function rpSommaAnn(righe, anno, regioni, campo){
+  let somma = null;
+  for(const r of righe){
+    if(Number(r.anno) !== anno) continue;
+    if(regioni && !regioni.includes(r.regione)) continue;
+    const v = r[campo];
+    if(v === undefined || v === null || isNaN(v)) continue;
+    somma = (somma === null ? 0 : somma) + Number(v);
+  }
+  return somma;
+}
+
+function rpPosizioneAnn(righe, anno, regione, campo){
+  const vals = REGIONS
+    .map(r => ({r, v: rpSommaAnn(righe, anno, [r], campo)}))
+    .filter(x => x.v !== null)
+    .sort((a, b) => b.v - a.v);
+  const i = vals.findIndex(x => x.r === regione);
+  return i < 0 ? null : {posizione: i + 1, su: vals.length};
+}
+
+function rpTabellaAnnuale(righe, anno, regione, metriche){
+  if(!righe.length) return '<p class="ts-note">Dati non caricati.</p>';
+  let html = rpIntestazione(regione);
+  let almeno = false;
+  for(const m of metriche){
+    const reg = rpSommaAnn(righe, anno, [regione], m.key);
+    const ita = rpSommaAnn(righe, anno, null, m.key);
+    if(reg === null && ita === null) continue;
+    almeno = true;
+    html += rpRiga(m.label, {
+      reg,
+      nord:   rpSommaAnn(righe, anno, NORD, m.key),
+      centro: rpSommaAnn(righe, anno, CENTRO, m.key),
+      sud:    rpSommaAnn(righe, anno, SUD, m.key),
+      ita,
+    }, m.fmt, rpPosizioneAnn(righe, anno, regione, m.key));
+  }
+  html += '</tbody></table></div>';
+  return almeno ? html : '<p class="ts-note">Nessun dato per questa annualità.</p>';
+}
+
+const RP_METRICHE_ECO = [
+  {key: 'n_interventi',       label: 'Numero di interventi',            fmt: 'int'},
+  {key: 'investimenti_MEUR',  label: 'Investimenti attivati (M€)',      fmt: 'dec'},
+  {key: 'risparmio_GWh_anno', label: 'Risparmio energetico (GWh/anno)', fmt: 'dec'},
+];
+const RP_METRICHE_BC = [
+  {key: 'n_interventi',       label: 'Numero di interventi',            fmt: 'int'},
+  {key: 'superficie_m2',      label: 'Superficie interessata (m²)',     fmt: 'int'},
+  {key: 'potenza_kW',         label: 'Potenza installata (kW)',         fmt: 'int'},
+  {key: 'risparmio_GWh_anno', label: 'Risparmio energetico (GWh/anno)', fmt: 'dec'},
+];
+const RP_METRICHE_BF = [
+  {key: 'investimento_MEUR',  label: 'Investimenti (M€)',               fmt: 'dec'},
+];
+
+// --------------------------------------------------------------- sintesi
+
+function rpSintesi(regione, iso, anno){
+  const macro = rpMacroDi(regione);
+  const regioniMacro = (RP_MACRO.find(x => x.chiave === macro) || {}).regioni || [];
+  const voci = [];
+
+  const edifici = rpSommaSup(iso, [regione], 'n_edifici_totale');
+  const edIta = rpItaliaSup(iso, 'n_edifici_totale');
+  const detr = rpSommaSup(iso, [regione], 'detrazioni_maturate');
+  const detrIta = rpItaliaSup(iso, 'detrazioni_maturate');
+  const posEd = rpPosizione(iso, regione, 'n_edifici_totale');
+
+  if(edifici !== null && edIta){
+    voci.push(`<strong>${fmt(edifici, 'int')}</strong> edifici oggetto di Superbonus, `
+      + `pari <strong>${rpPerc(edifici / edIta * 100, 'a')}</strong> del totale nazionale`
+      + (posEd ? ` (${posEd.posizione}ª regione su ${posEd.su})` : ''));
+  }
+  if(detr !== null && detrIta){
+    voci.push(`<strong>${fmt(detr, 'eur')}</strong> di detrazioni maturate per lavori conclusi, `
+      + `<strong>${rpPerc(detr / detrIta * 100, 'il')}</strong> nazionale`);
+  }
+  const edMacro = rpSommaSup(iso, regioniMacro, 'n_edifici_totale');
+  if(edifici !== null && edMacro){
+    voci.push(`nell'area <strong>${macro}</strong> la regione pesa per `
+      + `<strong>${rpPerc(edifici / edMacro * 100, 'il')}</strong> degli edifici`);
+  }
+  const invEco = rpSommaAnn(ANNUAL.Ecobonus, anno, [regione], 'investimenti_MEUR');
+  const invEcoIta = rpSommaAnn(ANNUAL.Ecobonus, anno, null, 'investimenti_MEUR');
+  if(invEco !== null && invEcoIta){
+    voci.push(`sull'<strong>Ecobonus ${anno}</strong> ha attivato `
+      + `<strong>${fmtNum(invEco, 1)} M€</strong> di investimenti, `
+      + `<strong>${rpPerc(invEco / invEcoIta * 100, 'il')}</strong> nazionale`);
+  }
+  if(!voci.length) return '<p class="ts-note">Dati insufficienti per la sintesi.</p>';
+  return '<ul class="rp-sintesi-lista"><li>' + voci.join('.</li><li>') + '.</li></ul>';
+}
+
+// ---------------------------------------------------------------- grafico
+
+/* Il grafico del rapporto e disegnato in SVG e non su tela: un SVG si scala da
+   solo quando la pagina passa alla stampa, mentre una tela va ridisegnata a
+   mano e, se l'evento non arriva, finisce tagliata.
+   Le due serie sono entrambe percentuali sul totale nazionale, quindi
+   condividono lo stesso asse: mettere valori assoluti di regione e Italia
+   sullo stesso grafico avrebbe richiesto due scale diverse, che rendono i
+   confronti visivi ingannevoli. */
+
+const RP_SERIE = [
+  {key: 'n_edifici_totale',   label: 'Edifici',            colore: '#2a78d6', sigla: 'EDIFICI'},
+  {key: 'detrazioni_maturate', label: 'Detrazioni maturate', colore: '#eb6834', sigla: 'DETRAZIONI'},
+];
+
+function rpGrafico(regione){
+  const box = document.getElementById('rp-grafico');
+  if(!box) return;
+
+  const L = 52, R = 96, T = 26, B = 34, W = 900, H = 300;
+  const serie = RP_SERIE.map(s => ({
+    ...s,
+    punti: DATES.map(d => {
+      const r = rpSommaSup(d, [regione], s.key), i = rpItaliaSup(d, s.key);
+      return (r === null || !i) ? null : r / i * 100;
+    }),
+  }));
+
+  const validi = serie.flatMap(s => s.punti).filter(v => v !== null);
+  if(!validi.length){ box.innerHTML = '<p class="ts-note">Dati insufficienti per il grafico.</p>'; return; }
+  const min = Math.max(0, Math.floor(Math.min(...validi) - 1));
+  const max = Math.ceil(Math.max(...validi) + 1);
+  const x = i => L + (W - L - R) * (DATES.length < 2 ? 0 : i / (DATES.length - 1));
+  const y = v => H - B - (H - T - B) * (max === min ? 0.5 : (v - min) / (max - min));
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" `
+          + `preserveAspectRatio="xMidYMid meet" role="img" `
+          + `aria-label="Quota di ${regione} sul totale nazionale nel tempo">`;
+
+  // griglia e asse verticale
+  const passi = 5;
+  for(let k = 0; k <= passi; k++){
+    const v = min + (max - min) * k / passi;
+    svg += `<line x1="${L}" y1="${y(v).toFixed(1)}" x2="${W - R}" y2="${y(v).toFixed(1)}" `
+         + `stroke="#eef2f7" stroke-width="1"/>`
+         + `<text x="${L - 8}" y="${(y(v) + 3.5).toFixed(1)}" text-anchor="end" `
+         + `font-size="11" fill="#6b7280">${v.toLocaleString('it-IT', {maximumFractionDigits: 1})}%</text>`;
+  }
+  // etichette temporali: una ogni dodici mesi
+  DATES.forEach((d, i) => {
+    if(i % 12 && i !== DATES.length - 1) return;
+    svg += `<text x="${x(i).toFixed(1)}" y="${H - B + 16}" text-anchor="middle" `
+         + `font-size="11" fill="#6b7280">${fmtItDate(d)}</text>`;
+  });
+  svg += `<line x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}" stroke="#cbd5e1" stroke-width="1"/>`;
+
+  // una spezzata per ogni tratto continuo, cosi i buchi restano buchi
+  const etichette = [];
+  for(const s of serie){
+    let tratto = [];
+    const chiudi = () => {
+      if(tratto.length > 1){
+        svg += `<polyline fill="none" stroke="${s.colore}" stroke-width="2" `
+             + `stroke-linejoin="round" points="${tratto.join(' ')}"/>`;
+      }else if(tratto.length === 1){
+        const [px, py] = tratto[0].split(',');
+        svg += `<circle cx="${px}" cy="${py}" r="2.5" fill="${s.colore}"/>`;
+      }
+      tratto = [];
+    };
+    s.punti.forEach((v, i) => {
+      if(v === null) chiudi();
+      else tratto.push(`${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+    });
+    chiudi();
+    let ultimo = null;
+    for(let i = s.punti.length - 1; i >= 0; i--){ if(s.punti[i] !== null){ ultimo = i; break; } }
+    if(ultimo !== null) etichette.push({s, i: ultimo, y: y(s.punti[ultimo])});
+  }
+
+  // Etichette a fine linea, distanziate: quando le due quote sono vicine i
+  // testi finirebbero uno sull'altro.
+  etichette.sort((a, b) => a.y - b.y);
+  let minimoY = -Infinity;
+  for(const e of etichette){
+    const yy = Math.max(e.y, minimoY + 13);
+    minimoY = yy;
+    svg += `<text x="${(x(e.i) + 7).toFixed(1)}" y="${(yy + 4).toFixed(1)}" `
+         + `font-size="11" font-weight="600" fill="${e.s.colore}">${e.s.sigla} `
+         + `${e.s.punti[e.i].toLocaleString('it-IT', {maximumFractionDigits: 1})}%</text>`;
+  }
+
+  // legenda
+  let lx = L;
+  for(const s of serie){
+    svg += `<line x1="${lx}" y1="${T - 12}" x2="${lx + 18}" y2="${T - 12}" stroke="${s.colore}" stroke-width="2"/>`
+         + `<text x="${lx + 24}" y="${T - 8}" font-size="11" fill="#334155">${s.label}</text>`;
+    lx += 30 + s.label.length * 6.2;
+  }
+  svg += '</svg>';
+  box.innerHTML = svg;
+}
+
+// ----------------------------------------------------------------- render
+
+function renderRapporto(){
+  const selR = document.getElementById('rp-regione');
+  const selD = document.getElementById('rp-data');
+  const selA = document.getElementById('rp-anno');
+  if(!selR || !selD || !selA) return;
+  const regione = selR.value || REGIONE_PREDEFINITA;
+  const iso = selD.value || DATES[DATES.length - 1];
+  const anno = parseInt(selA.value, 10);
+  const macro = rpMacroDi(regione);
+
+  document.getElementById('rp-titolo').textContent =
+    'Bonus edilizi in ' + (regione === "Valle d'Aosta" ? "Valle d'Aosta" : regione);
+  document.getElementById('rp-sottotitolo').innerHTML =
+    `Superbonus al <strong>${fmtItDate(iso)}</strong> · bonus annuali <strong>${anno}</strong>`
+    + (macro ? ` · area <strong>${macro}</strong>` : '')
+    + ` · elaborazione su dati ENEA, ${fmtItDate(new Date().toISOString().slice(0, 10))}`;
+
+  document.getElementById('rp-sintesi').innerHTML = rpSintesi(regione, iso, anno);
+
+  document.getElementById('rp-badge-sb').textContent = fmtItDate(iso);
+  document.getElementById('rp-fonte-sb').innerHTML =
+    'Fonte: <a href="https://www.efficienzaenergetica.enea.it/detrazioni-fiscali/superbonus/risultati-superbonus.html" target="_blank" rel="noopener">ENEA — Report mensili Superbonus</a>. '
+    + 'Valori cumulati dall\'avvio della misura. Le colonne Nord, Centro e Sud sono la somma delle regioni di ciascuna area secondo la ripartizione ISTAT.';
+  document.getElementById('rp-tab-sb').innerHTML = rpTabellaSuperbonus(regione, iso);
+
+  for(const [badge, fonte, tab, righe, metriche] of [
+    ['rp-badge-eco', 'rp-fonte-eco', 'rp-tab-eco', ANNUAL.Ecobonus, RP_METRICHE_ECO],
+    ['rp-badge-bc',  'rp-fonte-bc',  'rp-tab-bc',  ANNUAL.Bonus_Casa, RP_METRICHE_BC],
+    ['rp-badge-bf',  'rp-fonte-bf',  'rp-tab-bf',  ANNUAL.Bonus_Facciate, RP_METRICHE_BF],
+  ]){
+    document.getElementById(badge).textContent = anno;
+    document.getElementById(fonte).innerHTML = fonteRapporto(anno);
+    document.getElementById(tab).innerHTML = rpTabellaAnnuale(righe, anno, regione, metriche);
+  }
+
+  const note = [
+    'I valori del Superbonus sono cumulati dall\'avvio della misura, non flussi del mese: possono anche diminuire, perché ENEA rivede i dati quando delle asseverazioni vengono ritirate o riclassificate.',
+    'Le aree seguono la ripartizione ISTAT: Nord comprende Piemonte, Valle d\'Aosta, Lombardia, Trentino-Alto Adige, Veneto, Friuli-Venezia Giulia, Liguria ed Emilia-Romagna; Centro Toscana, Umbria, Marche e Lazio; Sud e Isole le restanti otto.',
+    'La colonna «% su Italia» misura il peso della regione sul totale nazionale, quella «Posizione» il suo rango fra le venti regioni per quel parametro.',
+    'Alcuni parametri del Superbonus esistono solo dai report più recenti: dove ENEA non li pubblicava la riga non compare.',
+  ];
+  if(anno <= 2022){
+    note.push('Per l\'Ecobonus il 2022 usa la vecchia classificazione ENEA per tecnologia: i totali regionali restano confrontabili con gli altri anni, il dettaglio per tipo d\'intervento no.');
+  }
+  document.getElementById('rp-note-lista').innerHTML = note.map(n => '<li>' + n + '</li>').join('');
+
+  rpGrafico(regione);
+}
+
+(function initRapporto(){
+  const selR = document.getElementById('rp-regione');
+  const selD = document.getElementById('rp-data');
+  const selA = document.getElementById('rp-anno');
+  if(!selR) return;
+
+  const riempi = (sel, valori, testo, scelto) => {
+    sel.innerHTML = '';
+    valori.forEach(v => {
+      const o = document.createElement('option');
+      o.value = String(v);
+      o.textContent = testo(v);
+      sel.appendChild(o);
+    });
+    if(scelto !== undefined) sel.value = String(scelto);
+  };
+
+  riempi(selR, REGIONS, r => r,
+         REGIONS.includes(REGIONE_PREDEFINITA) ? REGIONE_PREDEFINITA : REGIONS[0]);
+  riempi(selD, DATES.slice().reverse(), fmtItDate, DATES[DATES.length - 1]);
+  const anni = Array.from(new Set(ANNUAL.Ecobonus.map(r => Number(r.anno)))).sort((a, b) => b - a);
+  if(anni.length) riempi(selA, anni, a => a, anni[0]);
+
+  [selR, selD, selA].forEach(s => s.addEventListener('change', renderRapporto));
+  const btn = document.getElementById('rp-stampa');
+  if(btn) btn.addEventListener('click', () => window.print());
+
+
+})();
+
 // ============ BOOTSTRAP ============
 // Se i dati annuali sono embedded (ANNUAL_EMBEDDED), pre-popola selettori e rendering
 if(ANNUAL.Ecobonus.length || ANNUAL.Bonus_Casa.length || ANNUAL.Bonus_Facciate.length){
@@ -3050,6 +3563,7 @@ if(ANNUAL.Bonus_Casa.length)     renderBonusCasa();
 if(ANNUAL.Bonus_Facciate.length) renderBonusFacciate();
 renderAndamento();
 renderConfrontoProvince();
+renderRapporto();
 </script>
 </body>
 </html>
