@@ -3936,18 +3936,36 @@ function stimaPerc(lo, hi, dec){
 /** Intervallo in euro con UNA sola unita' di misura per entrambi gli
     estremi: fmt() sceglierebbe "mln" per 0,98 e "mld" per 1,02, e
     l'intervallo diventerebbe illeggibile. */
-function stimaEuro(lo, hi){
-  const scala = Math.abs(hi) >= 1e9 ? [1e9, 'mld €', 2]
-              : Math.abs(hi) >= 1e6 ? [1e6, 'mln €', 1]
-              : [1, '€', 0];
-  const n = v => (v / scala[0]).toLocaleString('it-IT',
-                  {minimumFractionDigits: scala[2], maximumFractionDigits: scala[2]});
-  const a = n(lo), b = n(hi);
+function stimaEuro(lo, hi, esatto){
+  if(esatto) return fmt(lo, 'eur');
+  // Stesso motivo di stimaDueCifre: "228,5–502,8 mln €" su una banda del 35%
+  // e' un decimale che non esiste.
+  const l = stimaDueCifre(lo, -1), h = stimaDueCifre(hi, 1);
+  const scala = Math.abs(h) >= 1e9 ? [1e9, 'mld €']
+              : Math.abs(h) >= 1e6 ? [1e6, 'mln €']
+              : [1, '€'];
+  const n = v => (v / scala[0]).toLocaleString('it-IT', {maximumFractionDigits: 2});
+  const a = n(l), b = n(h);
   return (a === b ? a : `${a}–${b}`) + ' ' + scala[1];
 }
 
-function stimaInteri(lo, hi){
-  const a = fmtInt.format(Math.round(lo)), b = fmtInt.format(Math.round(hi));
+/** Due cifre significative, arrotondando verso l'esterno.
+    Un intervallo largo il 30% stampato come "905–1.990 edifici" mostra
+    quattro cifre significative su una grandezza che non e' nota nemmeno
+    alle centinaia: le cifre in piu' non sono informazione, sono una
+    precisione che il metodo non ha e che fa leggere la stima come una
+    misura. "900–2.000" dice la stessa cosa senza mentire sul dettaglio. */
+function stimaDueCifre(v, verso){
+  if(!v) return 0;
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.abs(v))) - 1);
+  return (verso < 0 ? Math.floor(v / mag) : Math.ceil(v / mag)) * mag;
+}
+
+function stimaInteri(lo, hi, esatto){
+  // Con una sola provincia il valore non e' stimato: e' il totale regionale.
+  // Arrotondarlo lo trasformerebbe in un intervallo che non esiste.
+  if(esatto) return fmtInt.format(Math.round(lo));
+  const a = fmtInt.format(stimaDueCifre(lo, -1)), b = fmtInt.format(stimaDueCifre(hi, 1));
   return a === b ? a : `${a}–${b}`;
 }
 
@@ -3969,7 +3987,8 @@ function stimaTesto(s, provincia){
   let out = `<p>Sul Superbonus <strong>${p.provincia}</strong> vale una quota stimata `
     + `<strong>${stimaPercTonda(p.lo, p.hi)}</strong> ${stimaDelLa(s.regione)}`
     + (p.itLo !== null ? ` e <strong>${stimaPerc(p.itLo, p.itHi, 2)}</strong> del totale nazionale` : '')
-    + `, cioè ${stimaInteri(p.edLo, p.edHi)} edifici e ${stimaEuro(p.invLo, p.invHi)} `
+    + `, cioè ${stimaInteri(p.edLo, p.edHi, s.unica)} edifici e `
+    + `${stimaEuro(p.invLo, p.invHi, s.unica)} `
     + `di investimenti ammessi a detrazione. `;
   if(s.unica){
     out += `${rpConArt(s.regione, true)} ha una sola provincia, quindi qui la ripartizione `
@@ -4042,8 +4061,8 @@ function stimaTabella(s, provincia){
        + `<td class="r st-val">${stimaPercTonda(r.lo, r.hi)}`
        + (r.ance ? ` <span class="st-sub">(calcolo ${stimaPerc(r.bandaLo, r.bandaHi)})</span>` : '')
        + `</td>`
-       + `<td class="r st-val">${stimaInteri(r.edLo, r.edHi)}</td>`
-       + `<td class="r st-val">${stimaEuro(r.invLo, r.invHi)}</td>`
+       + `<td class="r st-val">${stimaInteri(r.edLo, r.edHi, s.unica)}</td>`
+       + `<td class="r st-val">${stimaEuro(r.invLo, r.invHi, s.unica)}</td>`
        + `<td class="r"><span class="st-tag ${t.classe}">${t.testo}</span></td></tr>`;
   });
   h += `<tr class="st-tot"><td class="rp-reg">${s.regione} — totale</td>`
@@ -4659,7 +4678,11 @@ function rpAnalisi(regione, iso, anno){
   }
 
   // --- come si e mosso il peso nel tempo
-  const conQuota = DATES.filter(d => rpSommaSup(d, [regione], 'n_edifici_totale') !== null
+  // La serie va troncata alla data del rapporto: altrimenti un rapporto
+  // chiesto al 31 dic 2022 racconta l'andamento fino al 2026, cioe' cita
+  // dati che nel resto del documento non compaiono.
+  const conQuota = DATES.filter(d => d <= iso
+                                  && rpSommaSup(d, [regione], 'n_edifici_totale') !== null
                                   && rpItaliaSup(d, 'n_edifici_totale'));
   if(conQuota.length > 2){
     const primo = conQuota[0], ultimo = conQuota[conQuota.length - 1];
@@ -4700,7 +4723,8 @@ function rpAnalisi(regione, iso, anno){
   }
 
   // --- bonus annuali: dal primo anno all'ultimo
-  const anni = Array.from(new Set(ANNUAL.Ecobonus.map(r => Number(r.anno)))).sort();
+  const anni = Array.from(new Set(ANNUAL.Ecobonus.map(r => Number(r.anno))))
+                    .filter(a => a <= anno).sort();
   if(anni.length > 1){
     const a0 = anni[0], a1 = anni[anni.length - 1];
     const frasi = [];
