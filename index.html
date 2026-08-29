@@ -3866,7 +3866,8 @@ function stimaDueCifre(v){
 }
 
 function stimaQuota(v){
-  return v.toLocaleString('it-IT', {maximumFractionDigits: 1}) + '%';
+  return v.toLocaleString('it-IT',
+    {maximumFractionDigits: Math.abs(v) < 1 ? 2 : 1}) + '%';
 }
 
 function stimaInteri(v, esatto){
@@ -3911,14 +3912,23 @@ function stimaTesto(s, provincia){
   // Il commento sul disaccordo va scritto in base al disaccordo che c'e'
   // davvero: su Torino le chiavi coincidono, su Frosinone si contraddicono,
   // e una frase uguale per entrambi i casi sarebbe falsa in uno dei due.
-  if(p.divergenza < 15){
-    out += `Le due concordano, ed è la ragione principale per cui la stima regge.`;
-  }else if(p.divergenza <= 35){
-    out += `Le due divergono del ${n1(p.divergenza)}%: il valore centrale è un compromesso, `
+  const gT = stimaGradoTaglia(p.quota), gD = stimaGradoDivergenza(p.divergenza);
+  if(gD === 0){
+    out += `Le due concordano.`;
+  }else if(gD === 1){
+    out += `Le due divergono ${rpArticoloNum(n1(p.divergenza), 'di')}${n1(p.divergenza)}%: il valore centrale è un compromesso, `
          + `non una misura confermata da entrambe.`;
   }else{
-    out += `Le due divergono del ${n1(p.divergenza)}%, cioè si contraddicono: il valore centrale `
+    out += `Le due divergono ${rpArticoloNum(n1(p.divergenza), 'di')}${n1(p.divergenza)}%, cioè si contraddicono: il valore centrale `
          + `non è sostenuto da nessuna delle due e vale solo come ordine di grandezza.`;
+  }
+  // Quale dei due fattori determina il giudizio, detto esplicitamente.
+  if(gT > gD){
+    out += ` A limitare la stima non è però l'accordo fra le fonti ma la dimensione della `
+         + `provincia, che pesa ${stimaQuota(p.quota)} della regione: su quote così piccole una `
+         + `chiave di ripartizione sbaglia molto più spesso.`;
+  }else if(gT === 0 && gD === 0){
+    out += ` La provincia pesa inoltre abbastanza perché la ripartizione sia stabile.`;
   }
   out += ` Affidabilità <strong>${t.testo}</strong>.</p>`;
 
@@ -4036,13 +4046,6 @@ function renderRapporto(){
     'Alcuni parametri del Superbonus esistono solo dai report più recenti: dove ENEA non li pubblicava la riga non compare.',
     'La stima provinciale non è un dato ENEA: nasce dal totale regionale ripartito con due chiavi indipendenti, di cui si prende la media. Metodo, errore misurato e criterio di affidabilità sono nella scheda «Stima provinciale del Superbonus».',
   ];
-  const stimaReg = stimaProvince(regione, iso);
-  if(stimaReg && stimaReg.valutazione && stimaReg.valutazione.scenari){
-    note.push('Per questa regione gli intervalli provinciali non sono quelli calcolati ma la '
-      + 'valutazione diretta di ANCE Piemonte: due scenari di ripartizione, ciascuno verificato '
-      + 'a somma 100%. Fra parentesi resta la banda che il calcolo avrebbe prodotto; dove la '
-      + 'valutazione è più stretta, afferma qualcosa che i dati da soli non dimostrano.');
-  }
   if(anno <= 2022){
     note.push('Per l\'Ecobonus il 2022 usa la vecchia classificazione ENEA per tecnologia: i totali regionali restano confrontabili con gli altri anni, il dettaglio per tipo d\'intervento no.');
   }
