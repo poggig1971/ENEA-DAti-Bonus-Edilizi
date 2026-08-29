@@ -3255,7 +3255,10 @@ function pcTerritorio(valore, provinciaA){
     investimenti_MEUR: r.investimenti_MEUR,
     risparmio_GWh_anno: r.risparmio_GWh_anno,
     abitanti: r.abitanti,
-    investimento_per_abitante_EUR: r.investimento_per_abitante_EUR,
+    // ricalcolato, non letto dalla colonna ENEA: nel confronto deve essere
+    // omogeneo con quello degli aggregati, che si calcola per forza
+    investimento_per_abitante_EUR: r.abitanti
+      ? r.investimenti_MEUR * 1e6 / r.abitanti : r.investimento_per_abitante_EUR,
   };
 }
 
@@ -3327,6 +3330,12 @@ function pcValore(t, m, procapite){
   if(v === null || v === undefined || isNaN(v)) return null;
   if(procapite && m.procapite && t.abitanti) v = v * 1e6 / t.abitanti;
   return v;
+}
+
+/** Il segno va messo solo se il numero, una volta arrotondato, non e' zero:
+    "-0 €/ab" annuncia una differenza che alla precisione mostrata non c'e'. */
+function segnoDi(v, dec){
+  return Math.abs(v) < 0.5 / Math.pow(10, dec) ? '' : (v > 0 ? '+' : '');
 }
 
 function renderConfrontoProvince(){
@@ -3419,8 +3428,8 @@ function renderConfrontoProvince(){
     html += `<tr><td>${s.m.label}</td>`
           + `<td>${s.a === null ? '—' : fmtNum(s.a, dec) + ' ' + u}</td>`
           + `<td>${s.b === null ? '—' : fmtNum(s.b, dec) + ' ' + u}</td>`
-          + `<td>${diff === null ? '—' : (diff >= 0 ? '+' : '') + fmtNum(diff, dec) + ' ' + u}</td>`
-          + `<td class="${cls}">${s.scarto === null ? '—' : (s.scarto >= 0 ? '+' : '') + s.scarto.toLocaleString('it-IT',{maximumFractionDigits:1}) + '%'}</td></tr>`;
+          + `<td>${diff === null ? '—' : segnoDi(diff, dec) + fmtNum(diff, dec) + ' ' + u}</td>`
+          + `<td class="${cls}">${s.scarto === null ? '—' : segnoDi(s.scarto, 1) + s.scarto.toLocaleString('it-IT',{maximumFractionDigits:1}) + '%'}</td></tr>`;
   }
   html += '</tbody></table></div>';
   if(tabella) tabella.innerHTML = html;
@@ -4327,6 +4336,14 @@ function tsFlussi(area, key, date){
   return out;
 }
 
+/** Vero quando l'utente ha scelto la data iniziale dopo la finale.
+    tsDate() in quel caso legge comunque l'intervallo dal minore al maggiore:
+    e' la lettura piu' utile, ma va dichiarata, altrimenti i due menu
+    mostrano un ordine e il grafico ne disegna un altro. */
+function tsInvertito(){
+  return TS.from !== null && TS.to !== null && TS.from > TS.to;
+}
+
 function renderFlussi(){
   const sel = document.getElementById('ts-flusso-area');
   if(!sel) return;
@@ -4345,6 +4362,14 @@ function renderFlussi(){
       '<p class="ts-note">Seleziona almeno una regione, oppure attiva la linea Italia.</p>';
     return;
   }
+  if(date.length < 2){
+    document.getElementById('ts-flussi').innerHTML =
+      '<p class="ts-note">L\'intervallo comprende una sola rilevazione: per calcolare '
+      + 'un incremento mensile ne servono almeno due. Allarga l\'intervallo con i due menu qui a fianco.</p>';
+    const n = document.getElementById('ts-flussi-nota');
+    if(n) n.textContent = '';
+    return;
+  }
   sel.value = aree.includes(prec) ? prec : aree[0];
   const area = sel.value;
 
@@ -4360,9 +4385,13 @@ function renderFlussi(){
     const negativi = noti.filter(v => v < 0).length;
     const ultimi = noti.slice(-12);
     const media = ultimi.reduce((s, v) => s + v, 0) / ultimi.length;
+    const avviso = tsInvertito()
+      ? ` Le due date erano invertite: l'intervallo è stato letto da ${fmtItDate(date[0])} `
+        + `a ${fmtItDate(date[date.length - 1])}.`
+      : '';
     nota.innerHTML = `Mese di maggiore incremento: <strong>${fmtItDate(date[iMax])}</strong> `
       + `con ${fmt(valori[iMax], param.fmt)}. Media degli ultimi ${ultimi.length} mesi rilevati: `
-      + `${fmt(media, param.fmt)}.`
+      + `${fmt(media, param.fmt)}.${avviso}`
       + (negativi ? ` In ${negativi} mesi il valore è diminuito: sono le revisioni di ENEA, `
                   + `non un errore di calcolo.` : '');
   }
@@ -4378,6 +4407,11 @@ function renderQuota(){
       return (v === null || !i) ? null : v / i * 100;
     }),
   }));
+  if(date.length < 2){
+    document.getElementById('ts-quota').innerHTML =
+      '<p class="ts-note">L\'intervallo comprende una sola rilevazione: non c\'è un andamento da disegnare.</p>';
+    return;
+  }
   if(!serie.length){
     document.getElementById('ts-quota').innerHTML =
       '<p class="ts-note">Seleziona almeno una regione per vedere il suo peso sul totale nazionale.</p>';
